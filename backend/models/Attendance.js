@@ -11,4 +11,7 @@ const attendanceSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 
+// Prevent Duplicate Attendance: One student per session
+attendanceSchema.index({ session_id: 1, student_id: 1 }, { unique: true });
+
 module.exports = mongoose.model('Attendance', attendanceSchema);

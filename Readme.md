@@ -11,85 +11,120 @@ The project is structured as a monorepo:
 
 ## Tech Stack
 
-*   **Frontend**: Next.js (React), TypeScript, Tailwind CSS (assumed based on standard Next.js setup).
-*   **Backend**: Node.js, Express.js.
+*   **Frontend**: Next.js (React), TypeScript, Tailwind CSS.
+*   **Backend**: Node.js, Express.js, MongoDB.
 
-## Prerequisites
+---
 
-*   Node.js (v18 or higher recommended)
-*   npm or yarn
+## 1. Setup Instructions
 
-## Getting Started
+### Prerequisites
+*   **Node.js**: v18 or higher recommended.
+*   **npm**: Included with Node.js.
+*   **MongoDB**: Ensure you have a running MongoDB instance (local or Atlas).
 
-### 1. Clone the repository
+### Installation
 
-```bash
-git clone <repository-url>
-cd DynaQR
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd DynaQR
+    ```
 
-### 2. Frontend Setup
+2.  **Install Frontend Dependencies:**
+    ```bash
+    cd frontend
+    npm install
+    ```
 
-Navigate to the frontend directory:
+3.  **Install Backend Dependencies:**
+    ```bash
+    cd ../backend
+    npm install
+    ```
 
-```bash
-cd frontend
-```
+### Running the Application
 
-Install dependencies:
+1.  **Start the Backend:**
+    ```bash
+    cd backend
+    npm run dev
+    # Server runs on http://localhost:5000
+    ```
 
-```bash
-npm install
-```
+2.  **Start the Frontend:**
+    Open a new terminal.
+    ```bash
+    cd frontend
+    npm run dev
+    # Client runs on http://localhost:3000
+    ```
 
-Set up environment variables:
+---
 
-```bash
-cp .env.example .env.local
-```
-Review `.env.local` to ensure `NEXT_PUBLIC_API_URL` points to your backend (default: `http://localhost:5000`).
+## 2. Environment Configuration
 
-Run the development server:
+The application requires environment variables to function. We provide example files to get you started.
 
-```bash
-npm run dev
-```
-The frontend will be available at `http://localhost:3000`.
+### Frontend
+1.  Navigate to `frontend/`.
+2.  Copy `.env.example` to `.env.local`:
+    ```bash
+    cp .env.example .env.local
+    ```
+3.  Review `.env.local`. The `NEXT_PUBLIC_API_URL` should point to your backend (default: `http://localhost:5000`).
 
-### 3. Backend Setup
+### Backend
+1.  Navigate to `backend/`.
+2.  Copy `.env.example` to `.env`:
+    ```bash
+    cp .env.example .env
+    ```
+3.  Edit `.env` and provide your `MONGO_URI` (connection string) and a secure `JWT_SECRET`.
 
-Navigate to the backend directory:
+---
 
-```bash
-cd backend
-```
+## 3. Database Seeding
 
-Install dependencies:
+The application requires initial data (students and teachers) to function correctly.
 
-```bash
-npm install
-```
+1.  Ensure your MongoDB connection is configured in `backend/.env`.
+2.  Run the seed script from the backend directory:
+    ```bash
+    cd backend
+    node seed.js
+    ```
+3.  This will import mock data from `backend/data/` into your database.
 
-Set up environment variables:
+---
 
-```bash
-cp .env.example .env
-```
-Review `.env` to configure the port and environment.
+## 4. Authentication (Current State)
 
-Run the development server:
+This application currently uses **MOCK Authentication** for development speed and simplicity.
 
-```bash
-npm run dev
-# or
-npm start
-```
-The backend will run on `http://localhost:5000` (or the port specified in your `.env`).
+*   **Mechanism**: Login is handled via a standard JWT flow.
+*   **Behavior**:
+    *   You must use a valid email address present in the database (e.g., from the seed data).
+    *   **Password checks are disabled.** You can enter any password or leave it blank (frontend logic may vary, but backend ignores it).
+    *   **Email Domain**: Only emails ending in `@rvce.edu.in` are allowed.
+*   **Roles**: The system supports `student` and `teacher` roles. The backend authoritatively assigns roles based on the email address.
 
-## Authentication
+**Note:** This mock setup allows developers to test role-based features without setting up an external identity provider.
 
-*   **Current Status**: The application currently uses **mock authentication** for development purposes.
-*   **Future Plans**: OAuth integration is planned for a future release to handle secure user authentication.
+---
+
+## 5. Authentication (Future Plan)
+
+We plan to migrate to **Google OAuth** in a future release.
+
+*   **Changes**:
+    *   The login form will be replaced by a "Sign in with Google" button.
+    *   The backend will validate Google ID tokens instead of checking passwords.
+*   **No Changes**:
+    *   The internal authorization logic (JWTs, roles, route protection) will remain exactly the same.
+    *   The backend will still issue a JWT to the frontend after verifying the Google identity.
+
+---
 
 ## Folder Structure
 
@@ -98,5 +133,6 @@ DynaQR/
 ├── backend/            # Backend API (Node.js/Express)
 ├── frontend/           # Frontend Application (Next.js)
 ├── .gitignore          # Git ignore rules
-└── README.md           # Project documentation
+├── README.md           # Project documentation
+└── API_CONTRACT.md     # API Contract documentation
 ```

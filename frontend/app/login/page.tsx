@@ -2,43 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-type Role = 'student' | 'teacher';
-
-interface MockUser {
-  id: string;
-  email: string;
-  role: Role;
-}
-
-interface MockAuthResponse {
-  token: string;
-  user: MockUser;
-}
+import api from '../../lib/api';
+import { saveToken } from '../../lib/auth';
+import { saveUserRole, UserRole } from '../../lib/role';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<Role | ''>('');
+  const [role, setRole] = useState<UserRole | ''>('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // MOCK API FUNCTION
-  // In the future, this will be replaced by a real fetch call to POST /auth/login
-  const mockLoginApi = async (emailInput: string, roleInput: Role): Promise<MockAuthResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          token: 'mock-jwt-token-' + Math.random().toString(36).substring(2),
-          user: {
-            id: 'user-' + Math.random().toString(36).substring(2),
-            email: emailInput,
-            role: roleInput,
-          },
-        });
-      }, 800); // Simulate network delay
-    });
-  };
 
   const validate = (): boolean => {
     setError('');
@@ -53,6 +26,7 @@ export default function LoginPage() {
       return false;
     }
 
+    // Role selection is kept for UX consistency, even if backend determines authority
     if (!role) {
       setError('Please select a role.');
       return false;
@@ -68,33 +42,63 @@ export default function LoginPage() {
       return;
     }
 
-    if (role !== 'student' && role !== 'teacher') {
-      setError('Invalid role selected.');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      // START MOCK API CALL
-      // Replace the following line with:
-      // const response = await fetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, role }) });
-      const data = await mockLoginApi(email, role);
-      // END MOCK API CALL
+      // Real Backend API Call
+      // Note: We send the email. The backend determines the role/identity.
+      // The 'role' state from the form is ignored for auth but kept for UX/Validation alignment.
+      const response = await api.post('/api/auth/login', { email });
+      const data = response.data;
 
-      // Store token (Mock behavior)
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userRole', data.user.role); // Optional: help with client-side checks
+      // Contract Enforcement: Read authoritative data from response
+      const token = data.token;
+      const userRole = data.user.role; // Must be accessed from data.user.role
 
-      // Redirect based on role
-      if (data.user.role === 'student') {
+      // Secure Storage via Utilities
+      saveToken(token);
+      saveUserRole(userRole);
+
+      // Navigation based on AUTHORITATIVE role
+      if (userRole === 'student') {
         router.push('/student/dashboard');
-      } else if (data.user.role === 'teacher') {
+      } else if (userRole === 'teacher') {
         router.push('/teacher/dashboard');
+      } else {
+        setError('Unknown role received from server.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError('An unexpected error occurred during login.');
+      
+      let msg = 'An unexpected error occurred during login. Please try again.';
+      
+      if (err.response) {
+        // Server responded with a status code
+        switch (err.response.status) {
+          case 401:
+            msg = 'Invalid email address. Please check your credentials.';
+            break;
+          case 403:
+            msg = 'Access forbidden. You do not have permission to log in.';
+            break;
+          case 400:
+            msg = err.response.data?.message || 'Invalid request. Please check your input.';
+            break;
+          case 429:
+             msg = 'Too many login attempts. Please try again later.';
+             break;
+          case 500:
+            msg = 'Server error. Please contact support.';
+            break;
+          default:
+            msg = err.response.data?.message || msg;
+        }
+      } else if (err.request) {
+        // Request was made but no response received
+        msg = 'Network error. Please check your internet connection and try again.';
+      }
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -138,7 +142,7 @@ export default function LoginPage() {
                 name="role"
                 required
                 value={role}
-                onChange={(e) => setRole(e.target.value as Role)}
+                onChange={(e) => setRole(e.target.value as UserRole)}
                 className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-black"
               >
                 <option value="" disabled>

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
@@ -7,8 +8,14 @@ const createSession = async (req, res) => {
   try {
     const { subject, section, startTime, endTime } = req.body;
 
-    // Generate a random unique "Secret Key" for the QR Code
-    const secret_key = Math.random().toString(36).substring(7) + Date.now().toString();
+    // --- INPUT VALIDATION ---
+    if (!subject || !section || !startTime || !endTime) {
+      return res.status(400).json({ message: 'Please provide subject, section, startTime, and endTime.' });
+    }
+    // ------------------------
+
+    // Generate a secure unique "Secret Key" for the QR Code
+    const secret_key = crypto.randomBytes(16).toString('hex');
 
     const session = await Session.create({
       faculty_id: req.user.id, // Comes from logged-in teacher
@@ -30,11 +37,23 @@ const createSession = async (req, res) => {
 const markAttendance = async (req, res) => {
   try {
     const { sessionId, code } = req.body;
+
+    // --- INPUT VALIDATION ---
+    if (!sessionId || !code) {
+      return res.status(400).json({ message: 'Please provide sessionId and QR code.' });
+    }
+    // ------------------------
+
     const session = await Session.findById(sessionId);
 
     // A. Check if session exists
     if (!session) {
       return res.status(404).json({ message: 'Session not found' });
+    }
+
+    // A2. Check if session is active (Stability)
+    if (!session.is_active) {
+      return res.status(400).json({ message: 'Session is inactive. Attendance cannot be marked.' });
     }
 
     // B. Check if Secret Key (QR) matches
@@ -66,12 +85,16 @@ const markAttendance = async (req, res) => {
     await Attendance.create({
       session_id: sessionId,
       student_id: student._id,
-      student_name: student.name,
-      usn: student.details.usn
+      student_name: student.student_details.name, // Fixed field access
+      usn: student.student_details.usn            // Fixed field access
     });
 
     res.json({ message: 'Attendance Marked Successfully!' });
   } catch (error) {
+    // Handle Duplicate Key Error from DB (Defense in Depth)
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'You have already marked attendance!' });
+    }
     console.error(error);
     res.status(500).json({ message: 'Server Error marking attendance' });
   }
