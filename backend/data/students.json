@@ -1,18 +1,18 @@
 [
   { 
-    "email": "student@college.edu", 
+    "email": "student@rvce.edu.in", 
     "name": "Test Student", 
     "usn": "1RV22CS001", 
     "section": "A" 
   },
   { 
-    "email": "aditi@college.edu", 
+    "email": "aditi@rvce.edu.in", 
     "name": "Aditi Rao", 
     "usn": "1RV22CS099", 
     "section": "B" 
   },
   { 
-    "email": "rohan@college.edu", 
+    "email": "rohan@rvce.edu.in", 
     "name": "Rohan Sharma", 
     "usn": "1RV22CS100", 
     "section": "A" 

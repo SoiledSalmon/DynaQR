@@ -1,12 +1,12 @@
 [
   { 
-    "email": "teacher@college.edu", 
+    "email": "teacher@rvce.edu.in", 
     "name": "Prof. Smith", 
     "emp_id": "FAC001", 
     "department": "CSE" 
   },
   { 
-    "email": "dean@college.edu", 
+    "email": "dean@rvce.edu.in", 
     "name": "Dr. Kapoor", 
     "emp_id": "FAC002", 
     "department": "ISE" 
