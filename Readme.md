@@ -80,7 +80,11 @@ The application requires environment variables to function. We provide example f
     ```bash
     cp .env.example .env
     ```
-3.  Edit `.env` and provide your `MONGO_URI` (connection string) and a secure `JWT_SECRET`.
+3.  Edit `.env` and provide your `MONGO_URI` (connection string).
+4.  **CRITICAL**: Set a strong `JWT_SECRET`.
+    *   It must be at least 32 characters long.
+    *   It must be random and unguessable.
+    *   The server will **refuse to start** if you use the insecure default.
 
 ---
 
@@ -103,6 +107,10 @@ The application requires initial data (students and teachers) to function correc
 This application currently uses **MOCK Authentication** for development speed and simplicity.
 
 *   **Mechanism**: Login is handled via a standard JWT flow.
+*   **Role Mapping**:
+    *   **Internal (Database)**: The role is stored as `faculty`.
+    *   **External (API/Frontend)**: The role is exposed as `teacher`.
+    *   The backend automatically handles this mapping. Frontend developers should strictly use `teacher`.
 *   **Behavior**:
     *   You must use a valid email address present in the database (e.g., from the seed data).
     *   **Password checks are disabled.** You can enter any password or leave it blank (frontend logic may vary, but backend ignores it).

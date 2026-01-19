@@ -12,6 +12,11 @@ const createSession = async (req, res) => {
     if (!subject || !section || !startTime || !endTime) {
       return res.status(400).json({ message: 'Please provide subject, section, startTime, and endTime.' });
     }
+    
+    // 4.2 LOGIC: Validate Time Window
+    if (new Date(startTime) >= new Date(endTime)) {
+      return res.status(400).json({ message: 'End time must be after start time.' });
+    }
     // ------------------------
 
     // Generate a secure unique "Secret Key" for the QR Code
@@ -36,11 +41,11 @@ const createSession = async (req, res) => {
 // --- 2. Student Marks Attendance ---
 const markAttendance = async (req, res) => {
   try {
-    const { sessionId, code } = req.body;
+    const { sessionId } = req.body;
 
     // --- INPUT VALIDATION ---
-    if (!sessionId || !code) {
-      return res.status(400).json({ message: 'Please provide sessionId and QR code.' });
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Please provide sessionId.' });
     }
     // ------------------------
 
@@ -57,9 +62,10 @@ const markAttendance = async (req, res) => {
     }
 
     // B. Check if Secret Key (QR) matches
-    if (session.secret_key !== code) {
-      return res.status(400).json({ message: 'Invalid QR Code' });
-    }
+    // REMOVED for Step 1 recovery: QR now encodes only sessionId.
+    // if (session.secret_key !== code) {
+    //   return res.status(400).json({ message: 'Invalid QR Code' });
+    // }
 
     // C. Check Time Constraints (The logic you wanted!)
     const now = new Date();
@@ -126,7 +132,8 @@ const getSessionDetails = async (req, res) => {
     const { sessionId } = req.params;
 
     // 1. Get the Session Info
-    const session = await Session.findById(sessionId);
+    // 2.1 SECURITY: Do NOT return secret_key
+    const session = await Session.findById(sessionId).select('-secret_key');
     if (!session) return res.status(404).json({ message: 'Session not found' });
 
     // 2. Security Check: Only the teacher who created it can see details
@@ -145,10 +152,45 @@ const getSessionDetails = async (req, res) => {
   }
 };
 
+// --- 5. Get Student Metrics ---
+const getStudentMetrics = async (req, res) => {
+  try {
+    const student = await User.findById(req.user.id);
+    if (!student || student.role !== 'student') {
+      return res.status(403).json({ message: 'Access denied. Students only.' });
+    }
+
+    // Metric 1: Total Sessions for the student's section
+    const totalSessions = await Session.countDocuments({ 
+      section: student.student_details.section 
+    });
+
+    // Metric 2: Sessions attended by this student
+    const attendedSessions = await Attendance.countDocuments({ 
+      student_id: req.user.id 
+    });
+
+    // Metric 3: Percentage
+    const attendancePercentage = totalSessions === 0 
+      ? 0 
+      : Math.round((attendedSessions / totalSessions) * 100);
+
+    res.json({
+      totalSessions,
+      attendedSessions,
+      attendancePercentage
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching metrics' });
+  }
+};
+
 // Don't forget to export them!
 module.exports = { 
   createSession, 
   markAttendance, 
   getStudentHistory, 
-  getSessionDetails 
+  getSessionDetails,
+  getStudentMetrics
 };

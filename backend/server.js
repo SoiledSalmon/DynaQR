@@ -7,6 +7,18 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit'); // Import Rate Limit
 const connectDB = require('./config/db');
 
+// --- SECURITY CHECK: JWT_SECRET ---
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'development_secret_key_123') {
+  console.error('FATAL ERROR: JWT_SECRET is missing or unsafe.');
+  console.error('Please set a strong, unique JWT_SECRET in your .env file.');
+  process.exit(1);
+}
+
+if (process.env.JWT_SECRET.length < 32) {
+  console.warn('WARNING: Your JWT_SECRET is short. Recommended length is at least 32 characters.');
+}
+// ----------------------------------
+
 // Initialize App
 const app = express();
 
