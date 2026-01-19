@@ -1,0 +1,14 @@
+[
+  { 
+    "email": "teacher@college.edu", 
+    "name": "Prof. Smith", 
+    "emp_id": "FAC001", 
+    "department": "CSE" 
+  },
+  { 
+    "email": "dean@college.edu", 
+    "name": "Dr. Kapoor", 
+    "emp_id": "FAC002", 
+    "department": "ISE" 
+  }
+]
