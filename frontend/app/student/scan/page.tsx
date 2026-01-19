@@ -1,35 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 import RouteGuard from '@/lib/routeGuard';
-
-// Attempt to handle both Default and Named exports for react-qr-reader
-const QrReader = dynamic(async () => {
-  const mod = await import('react-qr-reader');
-  // @ts-ignore
-  return mod.QrReader || mod.default || mod;
-}, { ssr: false });
 
 export default function ScanPage() {
   const [message, setMessage] = useState('');
   const [scanning, setScanning] = useState(true);
+  const scannerRef = useRef<any>(null);
 
-  const handleScan = async (result: any) => {
-    if (!result) return;
-    
-    // In strict mode, QrReader might fire multiple times. Stop after first success.
-    if (!scanning) return;
+  const handleScan = useCallback(async (sessionId: string) => {
+    if (!sessionId) return;
+
+    // Prevent multiple simultaneous scans
+    setScanning(false);
+    setMessage('Processing...');
 
     try {
-      // Robustly get text from result (handles different library versions)
-      const sessionId = result.getText ? result.getText() : (result.text || result);
-      
-      if (!sessionId) return;
-
-      setScanning(false); // Stop scanning
-      setMessage('Processing...');
+      // Stop scanner immediately on success
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        await scannerRef.current.stop();
+      }
 
       console.log('Scanned Session ID:', sessionId);
 
@@ -39,9 +30,57 @@ export default function ScanPage() {
     } catch (err: any) {
       console.error(err);
       setMessage(err.response?.data?.message || 'Error marking attendance');
-      setScanning(true); // Allow retry on error
+      // Allow retry after 3 seconds
+      setTimeout(() => setScanning(true), 3000);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let html5QrCode: any;
+
+    const startScanner = async () => {
+      try {
+        const { Html5Qrcode } = await import('html5-qrcode');
+        
+        // Ensure the element exists before initializing
+        const element = document.getElementById('reader');
+        if (!element) return;
+
+        html5QrCode = new Html5Qrcode("reader");
+        scannerRef.current = html5QrCode;
+
+        const config = { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        };
+
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText: string) => {
+            handleScan(decodedText);
+          },
+          () => {
+            // Success callback is enough for our needs
+          }
+        );
+      } catch (err) {
+        console.error("Failed to start scanner:", err);
+        setMessage("Error starting camera. Please check permissions.");
+      }
+    };
+
+    if (scanning) {
+      startScanner();
+    }
+
+    return () => {
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch((err: any) => console.error("Error stopping scanner:", err));
+      }
+    };
+  }, [scanning, handleScan]);
 
   return (
     <RouteGuard allowedRoles={['student']}>
@@ -53,17 +92,10 @@ export default function ScanPage() {
           
           <div className="p-6">
             <div className="aspect-square bg-black rounded-lg overflow-hidden relative">
-              {/* @ts-ignore - Suppress TS errors for the dynamic component */}
-              <QrReader
-                onResult={(result: any, error: any) => {
-                  if (!!result) handleScan(result);
-                }}
-                constraints={{ facingMode: 'environment' }}
-                className="w-full h-full object-cover"
-                ViewFinder={() => (
-                   <div className="absolute inset-0 border-2 border-indigo-400 opacity-50 m-12 rounded-lg pointer-events-none"></div>
-                )}
-              />
+              <div id="reader" className="w-full h-full"></div>
+              {scanning && (
+                <div className="absolute inset-0 border-2 border-indigo-400 opacity-50 m-12 rounded-lg pointer-events-none z-10"></div>
+              )}
             </div>
             
             <div className="mt-6 text-center">
