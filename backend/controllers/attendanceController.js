@@ -77,6 +77,11 @@ const markAttendance = async (req, res) => {
     }
 
     // D. Check for Duplicate Attendance
+    // 1. Validate User Exists
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
     const alreadyMarked = await Attendance.findOne({ 
       session_id: sessionId, 
       student_id: req.user.id 
@@ -88,6 +93,12 @@ const markAttendance = async (req, res) => {
 
     // E. Save Record
     const student = await User.findById(req.user.id);
+    
+    // 2. Validate Student Details
+    if (!student || !student.student_details) {
+      return res.status(400).json({ message: 'Student profile incomplete. Cannot mark attendance.' });
+    }
+
     await Attendance.create({
       session_id: sessionId,
       student_id: student._id,
