@@ -9,30 +9,40 @@ export default function ScanPage() {
   const [message, setMessage] = useState('');
   const [scanning, setScanning] = useState(true);
   const scannerRef = useRef<any>(null);
+  const processingRef = useRef<boolean>(false);
 
   const handleScan = useCallback(async (sessionId: string) => {
-    if (!sessionId) return;
+    if (!sessionId || processingRef.current) return;
 
-    // Prevent multiple simultaneous scans
+    processingRef.current = true;
     setScanning(false);
     setMessage('Processing...');
 
     try {
-      // Stop scanner immediately on success
+      // Stop scanner immediately to prevent multiple scans
       if (scannerRef.current && scannerRef.current.isScanning) {
+        console.log('Stopping scanner for session:', sessionId);
         await scannerRef.current.stop();
       }
 
-      console.log('Scanned Session ID:', sessionId);
-
-      // Call Backend - Corrected with /api prefix
       const res = await api.post('/api/attendance/mark', { sessionId });
       setMessage(res.data.message || 'Attendance Marked!');
+      // Stay in non-scanning state on success
     } catch (err: any) {
-      console.error(err);
-      setMessage(err.response?.data?.message || 'Error marking attendance');
-      // Allow retry after 3 seconds
-      setTimeout(() => setScanning(true), 3000);
+      console.error('Scan Error:', err);
+      const errorMsg = err.response?.data?.message || 'Error marking attendance';
+      setMessage(errorMsg);
+      
+      // If already marked, stay stopped. Otherwise, allow retry after delay.
+      if (errorMsg.toLowerCase().includes('already marked')) {
+        setScanning(false);
+        processingRef.current = true; // Keep blocked to prevent accidental restart
+      } else {
+        setTimeout(() => {
+          processingRef.current = false;
+          setScanning(true);
+        }, 3000);
+      }
     }
   }, []);
 
@@ -42,8 +52,6 @@ export default function ScanPage() {
     const startScanner = async () => {
       try {
         const { Html5Qrcode } = await import('html5-qrcode');
-        
-        // Ensure the element exists before initializing
         const element = document.getElementById('reader');
         if (!element) return;
 
@@ -62,13 +70,11 @@ export default function ScanPage() {
           (decodedText: string) => {
             handleScan(decodedText);
           },
-          () => {
-            // Success callback is enough for our needs
-          }
+          () => {}
         );
       } catch (err) {
         console.error("Failed to start scanner:", err);
-        setMessage("Error starting camera. Please check permissions.");
+        setMessage("Error starting camera.");
       }
     };
 
@@ -78,10 +84,16 @@ export default function ScanPage() {
 
     return () => {
       if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch((err: any) => console.error("Error stopping scanner:", err));
+        html5QrCode.stop().catch(() => {});
       }
     };
   }, [scanning, handleScan]);
+
+  const resetScanner = () => {
+    processingRef.current = false;
+    setMessage('');
+    setScanning(true);
+  };
 
   return (
     <RouteGuard allowedRoles={['student']}>
@@ -107,10 +119,10 @@ export default function ScanPage() {
             
             <div className="mt-8 text-center">
               <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-                message.includes('Error') || message.includes('Invalid')
+                message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid') || message.toLowerCase().includes('failed')
                   ? 'bg-red-500/10 text-red-400 border border-red-500/20' 
                   : message 
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                     : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
               }`}>
                 {message || 'Ready to scan'}
@@ -120,7 +132,7 @@ export default function ScanPage() {
           
           <div className="bg-zinc-900/50 border-t border-zinc-800 p-6 text-center">
             <button 
-              onClick={() => window.location.reload()}
+              onClick={resetScanner}
               className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               Reset Scanner
