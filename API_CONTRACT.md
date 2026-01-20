@@ -8,19 +8,22 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for the interface contrac
 
 ---
 
-## 1. Role Vocabulary
+## 1. Role Vocabulary & Mapping
 
-The application recognizes exactly two roles. These values are case-sensitive and must be used exactly as defined.
+The application recognizes exactly two roles externally. These values are case-sensitive and must be used exactly as defined.
 
 ### **Allowed Values**
 ```typescript
 type Role = 'student' | 'teacher';
 ```
 
-### **Constraints**
-- **Legacy term "faculty" is DEPRECATED.** It must NOT be used in API responses, role checks, or frontend logic.
-- Backend database values (e.g., in MongoDB) must be mapped to `'teacher'` before being sent to the frontend.
-- Frontend registration forms must submit `'teacher'` (not 'faculty').
+### **Internal Mapping**
+- **Internal Database Role:** `faculty`
+- **External API / Frontend Role:** `teacher`
+- **Behavior:** The backend handles this mapping automatically. 
+  - API responses and JWT payloads will always use `teacher`.
+  - Frontend must submit `teacher` during registration.
+  - The legacy term "faculty" is deprecated for all external communication.
 
 ---
 
@@ -44,50 +47,118 @@ The JSON Web Token (JWT) issued by the backend MUST contain the following claims
 
 ---
 
-## 3. Login Response Shape
+## 3. Authentication Endpoints
 
-The `/api/auth/login` endpoint (and its mock equivalent) MUST return the following JSON structure on success.
+### **Login**
+- **Path:** `POST /api/auth/login`
+- **Request Body:**
+  ```json
+  { "email": "user@rvce.edu.in" }
+  ```
+- **Response (200 Success):**
+  ```json
+  {
+    "token": "JWT_STRING",
+    "user": {
+      "id": "507f1f77bcf86cd799439011",
+      "email": "user@rvce.edu.in",
+      "role": "student" | "teacher"
+    }
+  }
+  ```
 
-### **Schema**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR...",
-  "user": {
-    "id": "507f1f77bcf86cd799439011",
+### **Register**
+- **Path:** `POST /api/auth/register`
+- **Request Body:**
+  ```json
+  {
     "email": "user@rvce.edu.in",
+    "password": "...",
     "role": "student" | "teacher"
   }
-}
-```
-
-### **Violations**
-- Returning `role` at the top level is FORBIDDEN.
-- Returning `details` mixed with user info is discouraged in the auth response (fetch separately if needed).
-- The key `user` is MANDATORY.
+  ```
 
 ---
 
-## 4. Frontend Storage Keys
+## 4. Attendance Endpoints
 
-To ensure the `RouteGuard` and API interceptors function correctly, the frontend MUST store session data using **only** the following LocalStorage keys.
+### **Create Session (Teacher Only)**
+- **Path:** `POST /api/attendance/create`
+- **Auth:** Required (JWT)
+- **Role:** `teacher`
+- **Request Body:**
+  ```json
+  {
+    "subject": "Mathematics",
+    "section": "A",
+    "startTime": "2026-01-20T10:00:00.000Z",
+    "endTime": "2026-01-20T11:00:00.000Z"
+  }
+  ```
+- **Response (201 Success):** Returns the session object **without** `secret_key`.
 
-### **Keys**
+### **Mark Attendance (Student Only)**
+- **Path:** `POST /api/attendance/mark`
+- **Auth:** Required (JWT)
+- **Role:** `student`
+- **Request Body:**
+  ```json
+  { "sessionId": "SESSION_ID_FROM_QR" }
+  ```
+- **Response (200 Success):**
+  ```json
+  { "message": "Attendance Marked Successfully!" }
+  ```
+
+### **Get Student Metrics (Student Only)**
+- **Path:** `GET /api/attendance/student-metrics`
+- **Auth:** Required (JWT)
+- **Role:** `student`
+- **Response (200 Success):**
+  ```json
+  {
+    "totalSessions": 10,
+    "attendedSessions": 8,
+    "attendancePercentage": 80
+  }
+  ```
+
+### **Get Attendance History (Student Only)**
+- **Path:** `GET /api/attendance/history`
+- **Auth:** Required (JWT)
+- **Role:** `student`
+- **Response (200 Success):** Array of attendance records with populated session details.
+
+### **Get Session Details (Teacher Only)**
+- **Path:** `GET /api/attendance/session/:sessionId`
+- **Auth:** Required (JWT)
+- **Role:** `teacher`
+- **Response (200 Success):**
+  ```json
+  {
+    "session": { ...metadata excluding secret_key },
+    "attendees": [
+      { "student_name": "...", "usn": "...", "timestamp": "..." }
+    ]
+  }
+  ```
+
+---
+
+## 5. Frontend Storage Keys
+
+The frontend MUST store session data using **only** the following LocalStorage keys.
+
 | Key | Purpose | Value Format |
 | :--- | :--- | :--- |
 | `auth_token` | Storing the raw JWT string | String |
 | `user_role` | Storing the user's role for quick UI logic | `'student'` OR `'teacher'` |
 
-### **Directives**
-- **Do NOT** use generic keys like `token` or `user`.
-- **Do NOT** access `localStorage` directly in components. Use the centralized `auth.ts` utilities.
-
 ---
 
-## 5. Contract Checklist for Developers
-
-Before marking a task complete, verify:
+## 6. Contract Checklist for Developers
 
 - [ ] Does the API return `role: 'teacher'` (not 'faculty')?
-- [ ] Does the JWT contain `{ role: '...' }`?
-- [ ] Is the frontend saving to `auth_token` (not `token`)?
-- [ ] Is the frontend saving to `user_role` (not `userRole`)?
+- [ ] Is `secret_key` excluded from all responses?
+- [ ] Do timestamps follow UTC format?
+- [ ] Is the frontend saving to `auth_token`?

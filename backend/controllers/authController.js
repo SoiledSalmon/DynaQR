@@ -135,6 +135,7 @@ exports.loginUser = async (req, res) => {
       }
     });
   } else {
-    res.status(401).json({ message: 'Invalid email' });
+    // 4.1 SECURITY: Prevent Email Enumeration
+    res.status(401).json({ message: 'Invalid credentials' });
   }
 };
