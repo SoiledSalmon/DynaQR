@@ -1,44 +1,45 @@
 'use client';
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
+import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useEffect } from 'react';
 import api from '@/lib/api';
 
-const QrReader = dynamic(() => import('react-qr-reader'), { ssr: false });
-
 export default function ScanPage() {
-  const [message, setMessage] = useState('');
+  useEffect(() => {
+    const scanner = new Html5QrcodeScanner(
+      'qr-reader',
+      { fps: 10, qrbox: 250 },
+      false
+    );
 
-  const handleScan = async (data: string | null) => {
-    if (!data) return;
-    try {
-      // data is the QR code secret_key
-      const res = await api.post('/attendance/mark', { code: data, sessionId: localStorage.getItem('currentSessionId') });
-      setMessage(res.data.message);
-    } catch (err: any) {
-      setMessage(err.response?.data?.message || 'Error marking attendance');
-    }
-  };
+    scanner.render(
+      async (decodedText) => {
+        try {
+          const payload = JSON.parse(decodedText);
 
-  const handleError = (err: any) => {
-    console.error(err);
-    setMessage('QR Scan error');
-  };
+          await api.post('/attendance/mark', {
+            sessionId: payload.sessionId,
+            code: payload.code,
+          });
+
+          alert('✅ Attendance marked successfully');
+          scanner.clear();
+        } catch (err) {
+          alert('❌ Invalid or expired QR');
+        }
+      },
+      () => {}
+    );
+
+    return () => {
+      scanner.clear().catch(() => {});
+    };
+  }, []);
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-center">Scan QR to Mark Attendance</h2>
-      <div className="border rounded-md overflow-hidden">
-        <QrReader
-          onResult={(result, error) => {
-            if (!!result) handleScan(result.getText());
-            if (!!error) handleError(error);
-          }}
-          constraints={{ facingMode: 'environment' }}
-          className="w-full"
-        />
-      </div>
-      {message && <p className="mt-4 text-center text-indigo-700 font-medium">{message}</p>}
+    <div className="p-6">
+      <h1 className="text-xl font-bold mb-4">Scan Attendance QR</h1>
+      <div id="qr-reader" />
     </div>
   );
 }
