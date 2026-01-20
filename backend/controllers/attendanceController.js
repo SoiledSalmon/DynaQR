@@ -186,11 +186,55 @@ const getStudentMetrics = async (req, res) => {
   }
 };
 
+// --- 6. Get Teacher Dashboard Data ---
+const getTeacherDashboardData = async (req, res) => {
+  try {
+    // 1. Fetch all sessions for this faculty member
+    const sessions = await Session.find({ faculty_id: req.user.id })
+      .sort({ class_start_time: -1 }); // Newest first
+
+    // 2. Calculate Metrics
+    const totalSessions = sessions.length;
+    
+    const now = new Date();
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(now.setHours(23, 59, 59, 999));
+    
+    // Reset 'now' for comparison
+    const currentTime = new Date();
+
+    const sessionsToday = sessions.filter(session => {
+      const sessionDate = new Date(session.class_start_time);
+      return sessionDate >= startOfDay && sessionDate <= endOfDay;
+    }).length;
+
+    const activeSessions = sessions.filter(session => {
+      const start = new Date(session.class_start_time);
+      const end = new Date(session.class_end_time);
+      return session.is_active && currentTime >= start && currentTime <= end;
+    }).length;
+
+    // 3. Get Recent Sessions (Limit 5)
+    const recentSessions = sessions.slice(0, 5);
+
+    res.json({
+      totalSessions,
+      activeSessions,
+      sessionsToday,
+      recentSessions
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching teacher dashboard data' });
+  }
+};
+
 // Don't forget to export them!
 module.exports = { 
   createSession, 
   markAttendance, 
   getStudentHistory, 
   getSessionDetails,
-  getStudentMetrics
+  getStudentMetrics,
+  getTeacherDashboardData
 };

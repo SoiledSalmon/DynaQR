@@ -104,21 +104,33 @@ export default function LoginPage() {
     }
   };
 
+  // Shared Input Styling baseline
+  const inputBaseStyles = "block w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors h-[42px]";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-md">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-6 font-sans text-zinc-100">
+      <div className="w-full max-w-sm space-y-8">
+        {/* Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Select your role and enter your institutional email.
+          <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800">
+            <span className="text-xl font-bold text-white">D</span>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">
+            Welcome back
+          </h1>
+          <p className="mt-2 text-sm text-zinc-400">
+            Enter your institutional details to access DynaQR.
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+        {/* Card */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 sm:p-8 backdrop-blur-sm">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            
+            {/* Email Input */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-xs font-medium uppercase tracking-wider text-zinc-500">
+                Email Address
               </label>
               <input
                 id="email"
@@ -128,52 +140,69 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-black"
-                placeholder="you@rvce.edu.in"
+                className={inputBaseStyles}
+                placeholder="id@rvce.edu.in"
               />
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+            {/* Role Select */}
+            <div className="space-y-2">
+              <label htmlFor="role" className="block text-xs font-medium uppercase tracking-wider text-zinc-500">
                 Role
               </label>
-              <select
-                id="role"
-                name="role"
-                required
-                value={role}
-                onChange={(e) => setRole(e.target.value as UserRole)}
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-black"
-              >
-                <option value="" disabled>
-                  Select your role
-                </option>
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-              </select>
+              <div className="relative">
+                <select
+                  id="role"
+                  name="role"
+                  required
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as UserRole)}
+                  className={`${inputBaseStyles} appearance-none pr-10`}
+                >
+                  <option value="" disabled>Select role</option>
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-500">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {error && (
-            <div className="text-sm text-red-600" role="alert">
-              {error}
-            </div>
-          )}
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-md bg-red-950/30 border border-red-900/50 p-3 text-sm text-red-400">
+                {error}
+              </div>
+            )}
 
-          <div>
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className={`group relative flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                loading
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
+              className="group flex w-full h-[42px] items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="h-4 w-4 animate-spin text-white/80" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Processing
+                </span>
+              ) : (
+                'Sign In'
+              )}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-zinc-600">
+          Issues accessing your account? <a href="#" className="font-medium text-zinc-400 hover:text-zinc-200 transition-colors">Contact Support</a>
+        </p>
       </div>
     </div>
   );

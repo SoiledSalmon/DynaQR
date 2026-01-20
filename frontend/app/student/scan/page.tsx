@@ -1,48 +1,5 @@
 'use client';
 
-<<<<<<< HEAD
-import { Html5QrcodeScanner } from 'html5-qrcode';
-import { useEffect } from 'react';
-import api from '@/lib/api';
-
-export default function ScanPage() {
-  useEffect(() => {
-    const scanner = new Html5QrcodeScanner(
-      'qr-reader',
-      { fps: 10, qrbox: 250 },
-      false
-    );
-
-    scanner.render(
-      async (decodedText) => {
-        try {
-          const payload = JSON.parse(decodedText);
-
-          await api.post('/attendance/mark', {
-            sessionId: payload.sessionId,
-            code: payload.code,
-          });
-
-          alert('✅ Attendance marked successfully');
-          scanner.clear();
-        } catch (err) {
-          alert('❌ Invalid or expired QR');
-        }
-      },
-      () => {}
-    );
-
-    return () => {
-      scanner.clear().catch(() => {});
-    };
-  }, []);
-
-  return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Scan Attendance QR</h1>
-      <div id="qr-reader" />
-    </div>
-=======
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 import RouteGuard from '@/lib/routeGuard';
@@ -67,8 +24,8 @@ export default function ScanPage() {
 
       console.log('Scanned Session ID:', sessionId);
 
-      // Call Backend
-      const res = await api.post('/attendance/mark', { sessionId });
+      // Call Backend - Corrected with /api prefix
+      const res = await api.post('/api/attendance/mark', { sessionId });
       setMessage(res.data.message || 'Attendance Marked!');
     } catch (err: any) {
       console.error(err);
@@ -127,29 +84,44 @@ export default function ScanPage() {
 
   return (
     <RouteGuard allowedRoles={['student']}>
-      <div className="min-h-screen bg-gray-50 p-4 flex flex-col items-center justify-center">
-        <div className="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-indigo-600 p-4">
+      <div className="min-h-screen bg-zinc-950 p-4 flex flex-col items-center justify-center font-sans">
+        <div className="w-full max-w-md bg-zinc-900 rounded-2xl shadow-xl border border-zinc-800 overflow-hidden">
+          <div className="bg-indigo-600 p-6">
             <h2 className="text-white text-xl font-bold text-center">Scan Attendance QR</h2>
+            <p className="text-indigo-100 text-xs text-center mt-1 opacity-80">Align the code within the frame</p>
           </div>
           
-          <div className="p-6">
-            <div className="aspect-square bg-black rounded-lg overflow-hidden relative">
+          <div className="p-8">
+            <div className="aspect-square bg-black rounded-xl overflow-hidden relative border border-zinc-800">
               <div id="reader" className="w-full h-full"></div>
               {scanning && (
-                <div className="absolute inset-0 border-2 border-indigo-400 opacity-50 m-12 rounded-lg pointer-events-none z-10"></div>
+                <div className="absolute inset-0 border-2 border-indigo-500/50 m-10 rounded-xl pointer-events-none z-10 animate-pulse"></div>
               )}
             </div>
             
-            <div className="mt-6 text-center">
-              <p className={`text-lg font-medium ${message.includes('Error') ? 'text-red-600' : 'text-indigo-600'}`}>
-                {message || 'Align QR code within the frame'}
-              </p>
+            <div className="mt-8 text-center">
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+                message.includes('Error') || message.includes('Invalid')
+                  ? 'bg-red-500/10 text-red-400 border border-red-500/20' 
+                  : message 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+              }`}>
+                {message || 'Ready to scan'}
+              </div>
             </div>
+          </div>
+          
+          <div className="bg-zinc-900/50 border-t border-zinc-800 p-6 text-center">
+            <button 
+              onClick={() => window.location.reload()}
+              className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              Reset Scanner
+            </button>
           </div>
         </div>
       </div>
     </RouteGuard>
->>>>>>> 9c9b6cc34f21471b33b9502596eda91d8d6ee4f1
   );
 }

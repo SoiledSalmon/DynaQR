@@ -24,3 +24,27 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 
+  Fix for Chrome/Edge/Safari autofill background.
+  Forces the background to stay dark using a box-shadow inset.
+  Matches bg-zinc-950 (#09090b) and text-zinc-200 (#e4e4e7).
+*/
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #09090b inset !important;
+  -webkit-text-fill-color: #e4e4e7 !important;
+  caret-color: #e4e4e7 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Ensure inputs keep their color scheme in dark mode */
+input, select, textarea {
+  color-scheme: dark;
+}
