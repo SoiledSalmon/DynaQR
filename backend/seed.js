@@ -38,6 +38,24 @@ const importData = async () => {
     // 2. INSERT NEW DATA FROM FILES
     await MasterStudent.insertMany(students);
     await MasterFaculty.insertMany(faculty);
+
+    // CREATE USERS FOR SEEDED DATA
+    const usersToCreate = [
+      ...students.map(s => ({
+        email: s.email,
+        password: 'password123',
+        role: 'student',
+        student_details: { name: s.name, usn: s.usn, section: s.section }
+      })),
+      ...faculty.map(f => ({
+        email: f.email,
+        password: 'password123',
+        role: 'faculty',
+        faculty_details: { name: f.name, emp_id: f.emp_id, department: f.department }
+      }))
+    ];
+    await User.insertMany(usersToCreate);
+
     console.log(`✅ Imported ${students.length} Students and ${faculty.length} Faculty members!`);
     
     process.exit();
