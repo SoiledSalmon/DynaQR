@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import RouteGuard from '@/lib/routeGuard';
 import { clearToken as authClearToken } from '../../../lib/auth';
@@ -29,13 +29,31 @@ interface AttendanceRecord {
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [overallPercent, setOverallPercent] = useState(0);
   const [classes, setClasses] = useState<ClassMetrics[]>([]);
   const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Toast State
+  const [showToast, setShowToast] = useState(false);
+  
   // Modal State
   const [selectedCourse, setSelectedCourse] = useState<ClassMetrics | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      setShowToast(true);
+      // Remove the query param to keep the URL clean (optional, but good UX)
+      router.replace('/student/dashboard');
+      
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 4000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, router]);
 
   // Fetch student attendance metrics AND history
   const fetchData = async () => {
@@ -76,6 +94,26 @@ export default function StudentDashboard() {
   return (
     <RouteGuard allowedRoles={['student']}>
       <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30 relative">
+        {/* Success Toast */}
+        {showToast && (
+          <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
+            <div className="bg-emerald-500 text-white px-4 py-3 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center gap-3 border border-emerald-400/20">
+              <svg className="h-5 w-5 text-emerald-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-semibold text-sm">Attendance Marked!</p>
+                <p className="text-xs text-emerald-100 opacity-90">Your record has been updated.</p>
+              </div>
+              <button onClick={() => setShowToast(false)} className="ml-2 text-emerald-100 hover:text-white">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-10">
           
           {/* Header */}

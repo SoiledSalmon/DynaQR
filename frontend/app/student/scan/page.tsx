@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import RouteGuard from '@/lib/routeGuard';
 
 export default function ScanPage() {
+  const router = useRouter();
   const [message, setMessage] = useState('');
   const [scanning, setScanning] = useState(true);
   const scannerRef = useRef<any>(null);
@@ -27,16 +29,26 @@ export default function ScanPage() {
 
       const res = await api.post('/api/attendance/mark', { sessionId });
       setMessage(res.data.message || 'Attendance Marked!');
-      // Stay in non-scanning state on success
+      
+      // Redirect to dashboard on success
+      router.push('/student/dashboard?success=true');
+      
     } catch (err: any) {
       console.error('Scan Error:', err);
       const errorMsg = err.response?.data?.message || 'Error marking attendance';
       setMessage(errorMsg);
       
-      // If already marked, stay stopped. Otherwise, allow retry after delay.
+      // If already marked, treat as success-like state (stop scanning & redirect)
       if (errorMsg.toLowerCase().includes('already marked')) {
         setScanning(false);
-        processingRef.current = true; // Keep blocked to prevent accidental restart
+        processingRef.current = true;
+        // Optional: Redirect even if already marked, or just stay here?
+        // Requirement says "After a SUCCESSFUL attendance mark... redirect". 
+        // "Already marked" is technically not a new success, but for UX it's better to redirect or show status.
+        // Let's redirect with a different param or just let them go back manually?
+        // Constraint: "Redirect ONLY after backend confirms success".
+        // "Already marked" is an error (400), so we do NOT redirect automatically, 
+        // but we DO stop scanning (which is already handled).
       } else {
         setTimeout(() => {
           processingRef.current = false;
@@ -44,7 +56,7 @@ export default function ScanPage() {
         }, 3000);
       }
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let html5QrCode: any;

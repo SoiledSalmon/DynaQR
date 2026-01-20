@@ -171,18 +171,20 @@ const getStudentMetrics = async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Students only.' });
     }
 
-    // 1. Fetch ALL sessions for this student's section
-    const allSessions = await Session.find({ 
-      section: student.student_details.section 
-    });
-
-    // 2. Fetch ALL attendance records for this student
+    // 1. Fetch ALL attendance records for this student first to get IDs
     const allAttendance = await Attendance.find({ 
       student_id: req.user.id 
     });
 
-    // Create a Set of attended session IDs for O(1) lookup
     const attendedSessionIds = new Set(allAttendance.map(a => a.session_id.toString()));
+
+    // 2. Fetch sessions: EITHER in student's section OR already attended
+    const allSessions = await Session.find({ 
+      $or: [
+        { section: student.student_details.section },
+        { _id: { $in: Array.from(attendedSessionIds) } }
+      ]
+    });
 
     // 3. Aggregate by Subject
     const subjectStats = {};
