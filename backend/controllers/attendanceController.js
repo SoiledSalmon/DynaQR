@@ -160,25 +160,61 @@ const getStudentMetrics = async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Students only.' });
     }
 
-    // Metric 1: Total Sessions for the student's section
-    const totalSessions = await Session.countDocuments({ 
+    // 1. Fetch ALL sessions for this student's section
+    const allSessions = await Session.find({ 
       section: student.student_details.section 
     });
 
-    // Metric 2: Sessions attended by this student
-    const attendedSessions = await Attendance.countDocuments({ 
+    // 2. Fetch ALL attendance records for this student
+    const allAttendance = await Attendance.find({ 
       student_id: req.user.id 
     });
 
-    // Metric 3: Percentage
-    const attendancePercentage = totalSessions === 0 
+    // Create a Set of attended session IDs for O(1) lookup
+    const attendedSessionIds = new Set(allAttendance.map(a => a.session_id.toString()));
+
+    // 3. Aggregate by Subject
+    const subjectStats = {};
+
+    allSessions.forEach(session => {
+      const subject = session.subject;
+      
+      if (!subjectStats[subject]) {
+        subjectStats[subject] = { total: 0, attended: 0, subject: subject };
+      }
+
+      subjectStats[subject].total += 1;
+
+      if (attendedSessionIds.has(session._id.toString())) {
+        subjectStats[subject].attended += 1;
+      }
+    });
+
+    // 4. Format the output for the frontend
+    const classes = Object.values(subjectStats).map((stat, index) => {
+      const percent = stat.total === 0 ? 0 : Math.round((stat.attended / stat.total) * 100);
+      return {
+        classId: `subject-${index}`, // Simple unique key
+        name: stat.subject,
+        attended: stat.attended,
+        total: stat.total,
+        percent: percent
+      };
+    });
+
+    // 5. Calculate Overall Metrics
+    const totalSessions = allSessions.length;
+    const attendedSessions = allAttendance.length; // Or sum from classes for consistency
+    const overallPercent = totalSessions === 0 
       ? 0 
       : Math.round((attendedSessions / totalSessions) * 100);
 
     res.json({
       totalSessions,
       attendedSessions,
-      attendancePercentage
+      overallPercent, // Frontend expects 'overallPercent' or 'attendancePercentage'
+      attendancePercentage: overallPercent, // Keep for backward compatibility
+      classes // The missing piece!
     });
   } catch (error) {
     console.error(error);

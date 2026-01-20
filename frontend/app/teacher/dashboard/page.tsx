@@ -174,7 +174,11 @@ export default function TeacherDashboard() {
                         </thead>
                         <tbody className="divide-y divide-zinc-800">
                           {metrics.recentSessions.map((session) => (
-                            <tr key={session._id} className="group hover:bg-zinc-800/30 transition-colors">
+                            <tr 
+                              key={session._id} 
+                              onClick={() => router.push(`/teacher/session/${session._id}`)}
+                              className="group hover:bg-zinc-800/30 transition-colors cursor-pointer"
+                            >
                               <td className="px-6 py-4 text-sm font-medium text-white">{session.subject}</td>
                               <td className="px-6 py-4 text-sm text-zinc-400">{session.section}</td>
                               <td className="px-6 py-4 text-sm text-zinc-400">

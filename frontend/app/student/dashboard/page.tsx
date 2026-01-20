@@ -16,21 +16,43 @@ interface ClassMetrics {
   percent: number;
 }
 
+interface AttendanceRecord {
+  _id: string;
+  session_id: {
+    _id: string;
+    subject: string;
+    section: string;
+    class_start_time: string;
+  };
+  timestamp: string;
+}
+
 export default function StudentDashboard() {
   const router = useRouter();
   const [overallPercent, setOverallPercent] = useState(0);
   const [classes, setClasses] = useState<ClassMetrics[]>([]);
+  const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal State
+  const [selectedCourse, setSelectedCourse] = useState<ClassMetrics | null>(null);
 
-  // Fetch student attendance metrics
-  const getMetrics = async () => {
+  // Fetch student attendance metrics AND history
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/api/attendance/student-metrics');
-      setOverallPercent(res.data.overallPercent || res.data.attendancePercentage || 0);
-      setClasses(res.data.classes || []);
+      
+      // Parallel fetch for efficiency
+      const [metricsRes, historyRes] = await Promise.all([
+        api.get('/api/attendance/student-metrics'),
+        api.get('/api/attendance/history')
+      ]);
+
+      setOverallPercent(metricsRes.data.overallPercent || metricsRes.data.attendancePercentage || 0);
+      setClasses(metricsRes.data.classes || []);
+      setHistory(historyRes.data || []);
     } catch (err) {
-      console.error('Error fetching metrics:', err);
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
@@ -43,12 +65,17 @@ export default function StudentDashboard() {
   };
 
   useEffect(() => {
-    getMetrics();
+    fetchData();
   }, []);
+
+  // Filter history for the selected course
+  const courseHistory = selectedCourse 
+    ? history.filter(h => h.session_id?.subject === selectedCourse.name)
+    : [];
 
   return (
     <RouteGuard allowedRoles={['student']}>
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30">
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30 relative">
         <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-10">
           
           {/* Header */}
@@ -119,7 +146,11 @@ export default function StudentDashboard() {
                     </thead>
                     <tbody className="divide-y divide-zinc-800">
                       {classes.map(cls => (
-                        <tr key={cls.classId} className="hover:bg-zinc-800/30 transition-colors group">
+                        <tr 
+                          key={cls.classId} 
+                          onClick={() => setSelectedCourse(cls)}
+                          className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                        >
                           <td className="px-6 py-4">
                             <span className="font-medium text-zinc-200 group-hover:text-white transition-colors">{cls.name}</span>
                           </td>
@@ -158,6 +189,99 @@ export default function StudentDashboard() {
                 <p className="text-xs text-zinc-500 leading-relaxed italic">
                   Note: A minimum of 75% attendance is typically required for semester eligibility. Please check with your faculty for specific course requirements.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Detailed View Modal */}
+          {selectedCourse && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+                onClick={() => setSelectedCourse(null)}
+              />
+              <div className="relative w-full max-w-2xl bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                
+                {/* Modal Header */}
+                <div className="p-6 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{selectedCourse.name}</h3>
+                    <p className="text-sm text-zinc-400 mt-1">Attendance Details</p>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedCourse(null)}
+                    className="p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Modal Content */}
+                <div className="p-6 overflow-y-auto">
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-3 gap-4 mb-8">
+                    <div className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl text-center">
+                      <p className="text-xs uppercase text-zinc-500 font-medium mb-1">Total Classes</p>
+                      <p className="text-2xl font-bold text-zinc-200">{selectedCourse.total}</p>
+                    </div>
+                    <div className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl text-center">
+                      <p className="text-xs uppercase text-zinc-500 font-medium mb-1">Attended</p>
+                      <p className="text-2xl font-bold text-emerald-500">{selectedCourse.attended}</p>
+                    </div>
+                    <div className={`bg-zinc-950 border border-zinc-800 p-4 rounded-xl text-center ${
+                       selectedCourse.percent >= 75 ? 'border-emerald-900/30' : 'border-amber-900/30'
+                    }`}>
+                      <p className="text-xs uppercase text-zinc-500 font-medium mb-1">Percentage</p>
+                      <p className={`text-2xl font-bold ${
+                        selectedCourse.percent >= 75 ? 'text-emerald-500' : 'text-amber-500'
+                      }`}>
+                        {selectedCourse.percent}%
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* History List */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-zinc-300 mb-4">Recent Sessions Attended</h4>
+                    {courseHistory.length > 0 ? (
+                      <div className="border border-zinc-800 rounded-xl overflow-hidden">
+                        <table className="w-full text-left">
+                          <thead className="bg-zinc-800/50">
+                            <tr>
+                              <th className="px-4 py-2 text-xs font-medium text-zinc-500 uppercase">Date</th>
+                              <th className="px-4 py-2 text-xs font-medium text-zinc-500 uppercase">Time</th>
+                              <th className="px-4 py-2 text-xs font-medium text-zinc-500 uppercase text-right">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-800 bg-zinc-950/50">
+                            {courseHistory.map((record) => (
+                              <tr key={record._id}>
+                                <td className="px-4 py-3 text-sm text-zinc-300">
+                                  {new Date(record.session_id.class_start_time).toLocaleDateString()}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-zinc-400 font-mono">
+                                  {new Date(record.session_id.class_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <span className="text-xs bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded border border-emerald-500/20">
+                                    Present
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/20">
+                        <p className="text-zinc-500 text-sm">No attendance records found yet.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
               </div>
             </div>
           )}

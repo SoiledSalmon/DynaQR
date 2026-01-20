@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import api from '@/lib/api';
 import RouteGuard from '@/lib/routeGuard';
 
@@ -86,7 +87,12 @@ export default function ScanPage() {
     <RouteGuard allowedRoles={['student']}>
       <div className="min-h-screen bg-zinc-950 p-4 flex flex-col items-center justify-center font-sans">
         <div className="w-full max-w-md bg-zinc-900 rounded-2xl shadow-xl border border-zinc-800 overflow-hidden">
-          <div className="bg-indigo-600 p-6">
+          <div className="bg-indigo-600 p-6 relative">
+            <Link href="/student/dashboard" className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+              </svg>
+            </Link>
             <h2 className="text-white text-xl font-bold text-center">Scan Attendance QR</h2>
             <p className="text-indigo-100 text-xs text-center mt-1 opacity-80">Align the code within the frame</p>
           </div>
