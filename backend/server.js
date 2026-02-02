@@ -26,7 +26,7 @@ const app = express();
 
 // 1. CORS Configuration
 app.use(cors({
-  origin: "https://dyna-qr.vercel.app/",
+  origin: "https://dyna-qr.vercel.app/login",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
