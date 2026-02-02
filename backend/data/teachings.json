@@ -1,0 +1,37 @@
+[
+  {
+    "faculty_email": "teacher@rvce.edu.in",
+    "subject_code": "CS201",
+    "section": "A",
+    "semester": 3,
+    "academic_year": "2025-26"
+  },
+  {
+    "faculty_email": "teacher@rvce.edu.in",
+    "subject_code": "CS301",
+    "section": "A",
+    "semester": 5,
+    "academic_year": "2025-26"
+  },
+  {
+    "faculty_email": "teacher@rvce.edu.in",
+    "subject_code": "CS201",
+    "section": "B",
+    "semester": 3,
+    "academic_year": "2025-26"
+  },
+  {
+    "faculty_email": "dean@rvce.edu.in",
+    "subject_code": "CS302",
+    "section": "A",
+    "semester": 3,
+    "academic_year": "2025-26"
+  },
+  {
+    "faculty_email": "dean@rvce.edu.in",
+    "subject_code": "CS501",
+    "section": "A",
+    "semester": 5,
+    "academic_year": "2025-26"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "code": "CS201",
+    "name": "Data Structures",
+    "department": "CSE"
+  },
+  {
+    "code": "CS301",
+    "name": "Computer Networks",
+    "department": "CSE"
+  },
+  {
+    "code": "CS302",
+    "name": "Database Systems",
+    "department": "CSE"
+  },
+  {
+    "code": "CS303",
+    "name": "Operating Systems",
+    "department": "CSE"
+  },
+  {
+    "code": "MAT201",
+    "name": "Mathematics III",
+    "department": "MATH"
+  },
+  {
+    "code": "CS501",
+    "name": "Machine Learning",
+    "department": "CSE"
+  }
+]

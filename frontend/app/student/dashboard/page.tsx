@@ -18,13 +18,14 @@ interface ClassMetrics {
 
 interface AttendanceRecord {
   _id: string;
-  session_id: {
+  marked_at: string;
+  session: {
     _id: string;
     subject: string;
+    subject_code: string;
     section: string;
     class_start_time: string;
-  };
-  timestamp: string;
+  } | null;
 }
 
 export default function StudentDashboard() {
@@ -34,10 +35,11 @@ export default function StudentDashboard() {
   const [classes, setClasses] = useState<ClassMetrics[]>([]);
   const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [error, setError] = useState<string | null>(null);
+
   // Toast State
   const [showToast, setShowToast] = useState(false);
-  
+
   // Modal State
   const [selectedCourse, setSelectedCourse] = useState<ClassMetrics | null>(null);
 
@@ -59,7 +61,8 @@ export default function StudentDashboard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+      setError(null);
+
       // Parallel fetch for efficiency
       const [metricsRes, historyRes] = await Promise.all([
         api.get('/api/attendance/student-metrics'),
@@ -69,8 +72,9 @@ export default function StudentDashboard() {
       setOverallPercent(metricsRes.data.overallPercent || metricsRes.data.attendancePercentage || 0);
       setClasses(metricsRes.data.classes || []);
       setHistory(historyRes.data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching data:', err);
+      setError(err.response?.data?.message || 'Failed to load attendance data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,8 +91,8 @@ export default function StudentDashboard() {
   }, []);
 
   // Filter history for the selected course
-  const courseHistory = selectedCourse 
-    ? history.filter(h => h.session_id?.subject === selectedCourse.name)
+  const courseHistory = selectedCourse
+    ? history.filter(h => h.session?.subject === selectedCourse.name)
     : [];
 
   return (
@@ -161,6 +165,24 @@ export default function StudentDashboard() {
             <div className="flex flex-col items-center justify-center py-20 space-y-4">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-800 border-t-indigo-500" />
               <p className="text-zinc-500 text-sm animate-pulse">Retrieving records...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                <svg className="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p className="text-red-400 text-sm text-center max-w-xs">{error}</p>
+              <button
+                onClick={fetchData}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry
+              </button>
             </div>
           ) : (
             <div className="space-y-6">
@@ -297,10 +319,14 @@ export default function StudentDashboard() {
                             {courseHistory.map((record) => (
                               <tr key={record._id}>
                                 <td className="px-4 py-3 text-sm text-zinc-300">
-                                  {new Date(record.session_id.class_start_time).toLocaleDateString()}
+                                  {record.session?.class_start_time
+                                    ? new Date(record.session.class_start_time).toLocaleDateString()
+                                    : 'N/A'}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-zinc-400 font-mono">
-                                  {new Date(record.session_id.class_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {record.session?.class_start_time
+                                    ? new Date(record.session.class_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    : 'N/A'}
                                 </td>
                                 <td className="px-4 py-3 text-right">
                                   <span className="text-xs bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded border border-emerald-500/20">

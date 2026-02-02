@@ -7,7 +7,8 @@ const {
   getStudentHistory,
   getSessionDetails,
   getStudentMetrics,
-  getTeacherDashboardData
+  getTeacherDashboardData,
+  rotateQRToken
 } = require('../controllers/attendanceController');
 
 // --- WRITE ROUTES (Actions) ---
@@ -19,5 +20,6 @@ router.get('/student-metrics', protect, authorizeRole(['student']), getStudentMe
 router.get('/history', protect, authorizeRole(['student']), getStudentHistory);
 router.get('/session/:sessionId', protect, authorizeRole(['teacher']), getSessionDetails);
 router.get('/teacher-dashboard', protect, authorizeRole(['teacher']), getTeacherDashboardData);
+router.post('/session/:sessionId/rotate-token', protect, authorizeRole(['teacher']), rotateQRToken);
 
 module.exports = router;

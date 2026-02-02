@@ -1,20 +1,37 @@
 [
-  { 
-    "email": "student@rvce.edu.in", 
-    "name": "Test Student", 
-    "usn": "1RV22CS001", 
-    "section": "A" 
+  {
+    "email": "student@rvce.edu.in",
+    "name": "Test Student",
+    "usn": "1RV22CS001",
+    "section": "A",
+    "semester": 3
   },
-  { 
-    "email": "aditi@rvce.edu.in", 
-    "name": "Aditi Rao", 
-    "usn": "1RV22CS099", 
-    "section": "B" 
+  {
+    "email": "aditi@rvce.edu.in",
+    "name": "Aditi Rao",
+    "usn": "1RV22CS099",
+    "section": "B",
+    "semester": 3
   },
-  { 
-    "email": "rohan@rvce.edu.in", 
-    "name": "Rohan Sharma", 
-    "usn": "1RV22CS100", 
-    "section": "A" 
+  {
+    "email": "rohan@rvce.edu.in",
+    "name": "Rohan Sharma",
+    "usn": "1RV22CS100",
+    "section": "A",
+    "semester": 3
+  },
+  {
+    "email": "priya@rvce.edu.in",
+    "name": "Priya Menon",
+    "usn": "1RV22CS050",
+    "section": "A",
+    "semester": 5
+  },
+  {
+    "email": "karthik@rvce.edu.in",
+    "name": "Karthik Reddy",
+    "usn": "1RV22CS075",
+    "section": "B",
+    "semester": 5
   }
 ]

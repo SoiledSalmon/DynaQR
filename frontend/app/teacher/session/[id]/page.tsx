@@ -2,22 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
 import RouteGuard from '@/lib/routeGuard';
 import api from '@/lib/api';
 
 interface SessionDetail {
   _id: string;
   subject: string;
+  subject_code: string;
   section: string;
+  semester: number;
   class_start_time: string;
   class_end_time: string;
-  is_active: boolean;
-  createdAt: string;
+  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
+  created_at: string;
 }
 
 interface Attendee {
-  _id: string;
   student_name: string;
   usn: string;
   timestamp: string;
@@ -56,7 +56,10 @@ export default function SessionDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-500">
-        Loading session details...
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-800 border-t-indigo-500" />
+          <p>Loading session details...</p>
+        </div>
       </div>
     );
   }
@@ -65,7 +68,7 @@ export default function SessionDetailPage() {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-4 text-zinc-400">
         <p>{error || 'Session not found'}</p>
-        <button 
+        <button
           onClick={() => router.back()}
           className="text-indigo-400 hover:text-indigo-300"
         >
@@ -75,18 +78,32 @@ export default function SessionDetailPage() {
     );
   }
 
-  const isExpired = new Date() > new Date(session.class_end_time);
-  const isActive = session.is_active && !isExpired;
+  // Determine session status for display
+  const getStatusInfo = () => {
+    switch (session.status) {
+      case 'active':
+        return { label: 'Active Session', isActive: true, className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+      case 'scheduled':
+        return { label: 'Scheduled', isActive: false, className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
+      case 'cancelled':
+        return { label: 'Cancelled', isActive: false, className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+      case 'completed':
+      default:
+        return { label: 'Ended / Expired', isActive: false, className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+    }
+  };
+
+  const statusInfo = getStatusInfo();
 
   return (
     <RouteGuard allowedRoles={['teacher']}>
       <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30">
         <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-800 pb-6">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => router.back()}
                 className="p-2 -ml-2 text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors"
               >
@@ -96,28 +113,24 @@ export default function SessionDetailPage() {
               </button>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-white">{session.subject}</h1>
-                <p className="text-zinc-500">{session.section}</p>
+                <p className="text-zinc-500">{session.section} - Semester {session.semester}</p>
               </div>
             </div>
-            
-            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${
-              isActive 
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                : 'bg-red-500/10 text-red-400 border-red-500/20'
-            }`}>
-              {isActive ? 'Active Session' : 'Ended / Expired'}
+
+            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${statusInfo.className}`}>
+              {statusInfo.label}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Left Column: Details & QR */}
             <div className="md:col-span-1 space-y-6">
-              
+
               {/* QR Code Card */}
               <div className="bg-white p-4 rounded-2xl shadow-xl shadow-indigo-500/5 border border-zinc-800">
                 <div className="aspect-square w-full bg-zinc-100 rounded-xl overflow-hidden mb-4">
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${session._id}`} 
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${session._id}`}
                     alt="Attendance QR Code"
                     className="w-full h-full object-cover mix-blend-multiply"
                   />
@@ -133,6 +146,10 @@ export default function SessionDetailPage() {
               {/* Time Details */}
               <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm space-y-4">
                 <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Subject Code</p>
+                  <p className="text-sm text-zinc-300">{session.subject_code}</p>
+                </div>
+                <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Start Time</p>
                   <p className="text-sm text-zinc-300">
                     {new Date(session.class_start_time).toLocaleString()}
@@ -144,22 +161,30 @@ export default function SessionDetailPage() {
                     {new Date(session.class_end_time).toLocaleString()}
                   </p>
                 </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Created At</p>
+                  <p className="text-sm text-zinc-300">
+                    {new Date(session.created_at).toLocaleString()}
+                  </p>
+                </div>
               </div>
 
             </div>
 
             {/* Right Column: Stats & Attendees */}
             <div className="md:col-span-2 space-y-6">
-              
+
               {/* Stats Row */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
                   <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Total Attendees</p>
                   <p className="text-3xl font-bold text-white">{attendees.length}</p>
                 </div>
-                {/* Placeholder for future stats */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 flex items-center justify-center text-zinc-600 text-sm">
-                  Attendance List
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Status</p>
+                  <p className={`text-lg font-semibold ${statusInfo.isActive ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                    {statusInfo.label}
+                  </p>
                 </div>
               </div>
 
@@ -168,7 +193,7 @@ export default function SessionDetailPage() {
                 <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/50">
                   <h3 className="font-semibold text-zinc-200">Student Log</h3>
                 </div>
-                
+
                 {attendees.length > 0 ? (
                   <div className="max-h-[500px] overflow-y-auto">
                     <table className="w-full text-left">
@@ -180,8 +205,8 @@ export default function SessionDetailPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-800">
-                        {attendees.map((student) => (
-                          <tr key={student._id} className="hover:bg-zinc-800/30 transition-colors">
+                        {attendees.map((student, index) => (
+                          <tr key={`${student.usn}-${index}`} className="hover:bg-zinc-800/30 transition-colors">
                             <td className="px-6 py-3 text-sm font-medium text-zinc-300">{student.student_name}</td>
                             <td className="px-6 py-3 text-sm text-zinc-500">{student.usn}</td>
                             <td className="px-6 py-3 text-sm text-zinc-500 text-right font-mono">
