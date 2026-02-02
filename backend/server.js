@@ -24,18 +24,16 @@ const app = express();
 
 // --- SECURITY MIDDLEWARE ---
 
-// 1. CORS Whitelist
-const whitelist = ['http://localhost:3000', 'http://localhost:5000'];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-};
-app.use(cors(corsOptions)); // Apply CORS with options
+// 1. CORS Configuration
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://dynaqr-q.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true
+}));
+app.options("*", cors());
 
 // 2. Rate Limiting
 const limiter = rateLimit({
