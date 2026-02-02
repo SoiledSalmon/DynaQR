@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import RouteGuard from '@/lib/routeGuard';
 import api from '@/lib/api';
@@ -33,6 +33,11 @@ export default function SessionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Token rotation state for active sessions
+  const [currentToken, setCurrentToken] = useState<string | null>(null);
+  const [tokenExpiresAt, setTokenExpiresAt] = useState<Date | null>(null);
+  const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     if (!sessionId) return;
 
@@ -52,6 +57,50 @@ export default function SessionDetailPage() {
 
     fetchSessionDetails();
   }, [sessionId]);
+
+  // Token rotation function
+  const rotateToken = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      const res = await api.post(`/api/attendance/session/${sessionId}/rotate-token`, {
+        validity_ms: 60000
+      });
+      setCurrentToken(res.data.token);
+      setTokenExpiresAt(new Date(res.data.expires_at));
+    } catch (err) {
+      console.error('Token rotation failed:', err);
+      // Don't clear token on failure - keep showing last valid QR
+    }
+  }, [sessionId]);
+
+  // Fetch initial token and start rotation for active sessions
+  useEffect(() => {
+    if (!session || session.status !== 'active') {
+      // Clear token for non-active sessions
+      setCurrentToken(null);
+      setTokenExpiresAt(null);
+      if (rotationIntervalRef.current) {
+        clearInterval(rotationIntervalRef.current);
+        rotationIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // Fetch initial token for active session
+    rotateToken();
+
+    // Start auto-rotation every 55 seconds
+    rotationIntervalRef.current = setInterval(() => {
+      rotateToken();
+    }, 55000);
+
+    return () => {
+      if (rotationIntervalRef.current) {
+        clearInterval(rotationIntervalRef.current);
+        rotationIntervalRef.current = null;
+      }
+    };
+  }, [session?.status, rotateToken]);
 
   if (loading) {
     return (
@@ -128,13 +177,51 @@ export default function SessionDetailPage() {
 
               {/* QR Code Card */}
               <div className="bg-white p-4 rounded-2xl shadow-xl shadow-indigo-500/5 border border-zinc-800">
-                <div className="aspect-square w-full bg-zinc-100 rounded-xl overflow-hidden mb-4">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${session._id}`}
-                    alt="Attendance QR Code"
-                    className="w-full h-full object-cover mix-blend-multiply"
-                  />
-                </div>
+                {session.status === 'active' && currentToken ? (
+                  <>
+                    <div className="aspect-square w-full bg-zinc-100 rounded-xl overflow-hidden mb-4">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(JSON.stringify({ sessionId: session._id, token: currentToken }))}`}
+                        alt="Attendance QR Code"
+                        className="w-full h-full object-cover mix-blend-multiply"
+                      />
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-xs text-zinc-500 mb-3">
+                      <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      <span>Auto-rotating for security</span>
+                    </div>
+                    <button
+                      onClick={rotateToken}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-zinc-100 text-zinc-600 text-xs font-medium hover:bg-zinc-200 transition-colors mb-3"
+                    >
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh QR
+                    </button>
+                  </>
+                ) : session.status === 'active' ? (
+                  <div className="aspect-square w-full bg-zinc-100 rounded-xl flex items-center justify-center mb-4">
+                    <div className="text-center space-y-2">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-400 border-t-zinc-600 mx-auto" />
+                      <p className="text-zinc-500 text-xs">Loading QR...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="aspect-square w-full bg-zinc-100 rounded-xl flex items-center justify-center mb-4">
+                    <div className="text-center space-y-2 px-4">
+                      <svg className="h-8 w-8 text-zinc-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-zinc-500 text-xs">
+                        {session.status === 'scheduled' ? 'QR available when session starts' : 'Session has ended'}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="text-center">
                   <p className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1">Session ID</p>
                   <code className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded block truncate select-all cursor-pointer" title={session._id}>

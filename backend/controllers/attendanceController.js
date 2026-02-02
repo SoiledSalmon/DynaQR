@@ -134,8 +134,8 @@ const createSession = async (req, res) => {
  * @access  Student only
  *
  * Flow:
- * 1. Validate input (sessionId, qr_token optional)
- * 2. Validate QR token if provided (expiry + existence)
+ * 1. Validate input (sessionId, qr_token REQUIRED)
+ * 2. Validate QR token (expiry + existence)
  * 3. Fetch session with populated Teaching
  * 4. Validate session is active and within time window
  * 5. Validate student enrollment (section + semester match)
@@ -151,21 +151,24 @@ const markAttendance = async (req, res) => {
     if (!sessionId) {
       return res.status(400).json({ message: 'Please provide sessionId.' });
     }
+
+    // QR token is REQUIRED for security (replay protection)
+    if (!qr_token) {
+      return res.status(400).json({ message: 'QR token is required. Please scan a valid QR code.' });
+    }
     // ------------------------
 
     const student = req.user;
 
-    // 1. Validate QR token if provided
-    if (qr_token) {
-      const validToken = await QRToken.validateToken(sessionId, qr_token);
-      if (!validToken) {
-        await AuditLog.logAttendance(student._id, sessionId, false, {
-          reason: 'invalid_or_expired_token',
-          qr_token,
-          ip: req.ip
-        });
-        return res.status(400).json({ message: 'Invalid or expired QR token.' });
-      }
+    // 1. Validate QR token (MANDATORY)
+    const validToken = await QRToken.validateToken(sessionId, qr_token);
+    if (!validToken) {
+      await AuditLog.logAttendance(student._id, sessionId, false, {
+        reason: 'invalid_or_expired_token',
+        qr_token,
+        ip: req.ip
+      });
+      return res.status(400).json({ message: 'Invalid or expired QR token. Please scan again.' });
     }
 
     // 2. Fetch session with populated Teaching

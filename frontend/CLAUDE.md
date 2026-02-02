@@ -152,8 +152,36 @@ The frontend connects to the backend API which uses the new schema:
 ```
 
 #### `POST /api/attendance/mark`
-- **Request**: `{ sessionId, qr_token? }`
+- **Request**: `{ sessionId, qr_token }` (both REQUIRED)
 - **Response**: `{ message: "Attendance Marked Successfully!" }`
+
+## QR Code Handling
+
+### QR Generation (Teacher)
+QR codes encode a JSON payload with rotating tokens:
+```typescript
+const qrPayload = JSON.stringify({ sessionId, token: currentToken });
+const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrPayload)}`;
+```
+
+### Token Rotation
+- Tokens rotate every **55 seconds** (5s buffer before 60s expiry)
+- Use `useEffect` with `setInterval` to auto-rotate
+- Call `POST /api/attendance/session/:sessionId/rotate-token` to get new token
+- Clear interval on unmount or view change
+
+### QR Scanning (Student)
+Parse the scanned QR as JSON:
+```typescript
+const payload = JSON.parse(decodedText);
+const { sessionId, token } = payload;
+await api.post('/api/attendance/mark', { sessionId, qr_token: token });
+```
+
+### Security
+- `qr_token` is **MANDATORY** - plain sessionId QRs are rejected
+- Tokens expire after 60 seconds to prevent screenshot sharing
+- Token validation happens server-side
 
 ## Critical Conventions
 

@@ -119,10 +119,10 @@ The JSON Web Token (JWT) issued by the backend MUST contain the following claims
   ```json
   {
     "sessionId": "SESSION_ID_FROM_QR",
-    "qr_token": "6_CHAR_TOKEN (optional)"
+    "qr_token": "6_CHAR_TOKEN (REQUIRED)"
   }
   ```
-- **Note:** If `qr_token` is provided, it must be valid and not expired.
+- **Important:** `qr_token` is **MANDATORY** for replay protection. Requests without a valid token will be rejected.
 - **Response (200 Success):**
   ```json
   { "message": "Attendance Marked Successfully!" }
@@ -204,7 +204,37 @@ The JSON Web Token (JWT) issued by the backend MUST contain the following claims
 
 ---
 
-## 5. Frontend Storage Keys
+## 6. QR Code Payload Format
+
+The QR code displayed by teachers contains a JSON payload that students scan. This format enables **rotating token security** to prevent screenshot-based replay attacks.
+
+### **QR Code Data Format**
+```json
+{
+  "sessionId": "MongoDB_ObjectId_String",
+  "token": "6_CHAR_HEX_TOKEN"
+}
+```
+
+### **Example Encoded QR Data**
+```
+{"sessionId":"507f1f77bcf86cd799439011","token":"a1b2c3"}
+```
+
+### **Security Properties**
+- **Token Validity:** 60 seconds (default)
+- **Rotation Interval:** Frontend rotates QR every 55 seconds (5s buffer before expiry)
+- **Replay Protection:** Tokens are validated against the session and expire after use or timeout
+- **Screenshot Mitigation:** Shared screenshots become invalid after 60 seconds
+
+### **Frontend Implementation Notes**
+- When generating QR: `JSON.stringify({ sessionId, token })` then URL-encode for QR API
+- When scanning QR: `JSON.parse(decodedText)` to extract `sessionId` and `token`
+- Both fields are **REQUIRED** - plain sessionId QRs are rejected
+
+---
+
+## 7. Frontend Storage Keys
 
 The frontend MUST store session data using **only** the following LocalStorage keys.
 
@@ -215,7 +245,7 @@ The frontend MUST store session data using **only** the following LocalStorage k
 
 ---
 
-## 6. Contract Checklist for Developers
+## 8. Contract Checklist for Developers
 
 - [ ] Does the API return `role: 'teacher'` (not 'faculty')?
 - [ ] Is `secret_key` excluded from GET responses (only returned on session creation)?

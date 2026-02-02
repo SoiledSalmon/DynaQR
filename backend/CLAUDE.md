@@ -122,9 +122,23 @@ Status is an enum, not boolean. Use `session.updateStatusByTime()` for auto-upda
 // Generate new token (60s validity)
 const token = await QRToken.generateForSession(sessionId, 60000);
 
-// Validate token on attendance mark
+// Validate token on attendance mark (REQUIRED)
 const valid = await QRToken.validateToken(sessionId, scannedToken);
 ```
+
+**Important:** `qr_token` is **MANDATORY** for attendance marking. Requests without a valid token are rejected with 400 status.
+
+### QR Payload Format
+Frontend QR codes encode JSON with rotating tokens:
+```json
+{
+  "sessionId": "MongoDB_ObjectId",
+  "token": "6_char_hex"
+}
+```
+- Token validity: 60 seconds (TTL auto-delete in MongoDB)
+- Frontend rotates every 55 seconds
+- Prevents screenshot-based replay attacks
 
 ### Secret Key Handling
 - `SessionNew.secret_key`: 16-byte random hex, primary session secret

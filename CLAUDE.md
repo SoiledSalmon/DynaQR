@@ -92,7 +92,20 @@ Monorepo structure with separate frontend and backend applications:
 
 ### Attendance Flow
 1. **Create Session**: Validate Teaching exists and faculty is assigned, check for overlaps, create session + first QRToken
-2. **Mark Attendance**: Validate QR token, session status, time window, student enrollment (section + semester), then create record with verification metadata
+2. **Mark Attendance**: Validate QR token (REQUIRED), session status, time window, student enrollment (section + semester), then create record with verification metadata
+
+### QR Code Format
+QR codes encode a JSON payload with rotating tokens for replay protection:
+```json
+{
+  "sessionId": "MongoDB_ObjectId_String",
+  "token": "6_CHAR_HEX_TOKEN"
+}
+```
+- **Token validity**: 60 seconds
+- **Rotation interval**: Frontend rotates every 55 seconds
+- **Security**: Prevents screenshot-based replay attacks
+- **Mandatory**: `qr_token` is REQUIRED for attendance marking
 
 ### Security Features
 - JWT_SECRET must be 32+ chars; server refuses to start with weak secret

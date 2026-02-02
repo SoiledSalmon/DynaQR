@@ -13,12 +13,39 @@ export default function ScanPage() {
   const scannerRef = useRef<any>(null);
   const processingRef = useRef<boolean>(false);
 
-  const handleScan = useCallback(async (sessionId: string) => {
-    if (!sessionId || processingRef.current) return;
+  const handleScan = useCallback(async (decodedText: string) => {
+    if (!decodedText || processingRef.current) return;
 
     processingRef.current = true;
     setScanning(false);
     setMessage('Processing...');
+
+    // Parse QR payload - expect JSON { sessionId, token }
+    let sessionId: string;
+    let qr_token: string | undefined;
+
+    try {
+      const payload = JSON.parse(decodedText);
+      sessionId = payload.sessionId;
+      qr_token = payload.token;
+    } catch {
+      // Invalid QR format - not JSON
+      setMessage('Invalid QR code format. Please scan a valid attendance QR.');
+      setTimeout(() => {
+        processingRef.current = false;
+        setScanning(true);
+      }, 3000);
+      return;
+    }
+
+    if (!sessionId || !qr_token) {
+      setMessage('Invalid QR code. Missing required data.');
+      setTimeout(() => {
+        processingRef.current = false;
+        setScanning(true);
+      }, 3000);
+      return;
+    }
 
     try {
       // Stop scanner immediately to prevent multiple scans
@@ -27,27 +54,27 @@ export default function ScanPage() {
         await scannerRef.current.stop();
       }
 
-      const res = await api.post('/api/attendance/mark', { sessionId });
+      const res = await api.post('/api/attendance/mark', { sessionId, qr_token });
       setMessage(res.data.message || 'Attendance Marked!');
-      
+
       // Redirect to dashboard on success
       router.push('/student/dashboard?success=true');
-      
+
     } catch (err: any) {
       console.error('Scan Error:', err);
       const errorMsg = err.response?.data?.message || 'Error marking attendance';
       setMessage(errorMsg);
-      
+
       // If already marked, treat as success-like state (stop scanning & redirect)
       if (errorMsg.toLowerCase().includes('already marked')) {
         setScanning(false);
         processingRef.current = true;
         // Optional: Redirect even if already marked, or just stay here?
-        // Requirement says "After a SUCCESSFUL attendance mark... redirect". 
+        // Requirement says "After a SUCCESSFUL attendance mark... redirect".
         // "Already marked" is technically not a new success, but for UX it's better to redirect or show status.
         // Let's redirect with a different param or just let them go back manually?
         // Constraint: "Redirect ONLY after backend confirms success".
-        // "Already marked" is an error (400), so we do NOT redirect automatically, 
+        // "Already marked" is an error (400), so we do NOT redirect automatically,
         // but we DO stop scanning (which is already handled).
       } else {
         setTimeout(() => {

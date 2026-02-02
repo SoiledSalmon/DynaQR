@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import RouteGuard from '../../../lib/routeGuard';
 import { clearToken as authClearToken } from '../../../lib/auth';
@@ -46,6 +46,11 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Token rotation state
+  const [currentToken, setCurrentToken] = useState<string | null>(null);
+  const [tokenExpiresAt, setTokenExpiresAt] = useState<Date | null>(null);
+  const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Dashboard Data State
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
@@ -83,15 +88,63 @@ export default function TeacherDashboard() {
     fetchDashboardData();
   }, []);
 
+  // Token rotation function
+  const rotateToken = useCallback(async (sessionId: string) => {
+    try {
+      const res = await api.post(`/api/attendance/session/${sessionId}/rotate-token`, {
+        validity_ms: 60000
+      });
+      setCurrentToken(res.data.token);
+      setTokenExpiresAt(new Date(res.data.expires_at));
+    } catch (err) {
+      console.error('Token rotation failed:', err);
+      // Don't clear token on failure - keep showing last valid QR
+    }
+  }, []);
+
+  // Auto-rotation effect - rotates every 55 seconds (5s before 60s expiry)
+  useEffect(() => {
+    if (!createdSessionId || !currentToken) return;
+
+    rotationIntervalRef.current = setInterval(() => {
+      rotateToken(createdSessionId);
+    }, 55000);
+
+    return () => {
+      if (rotationIntervalRef.current) {
+        clearInterval(rotationIntervalRef.current);
+        rotationIntervalRef.current = null;
+      }
+    };
+  }, [createdSessionId, currentToken, rotateToken]);
+
+  // Clear rotation when view changes to dashboard
+  useEffect(() => {
+    if (view === 'dashboard' && rotationIntervalRef.current) {
+      clearInterval(rotationIntervalRef.current);
+      rotationIntervalRef.current = null;
+    }
+  }, [view]);
+
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
     setCreatedSessionId(null);
+    setCurrentToken(null);
+    setTokenExpiresAt(null);
+
+    // Clear any existing rotation interval
+    if (rotationIntervalRef.current) {
+      clearInterval(rotationIntervalRef.current);
+      rotationIntervalRef.current = null;
+    }
 
     try {
       const res = await api.post('/api/attendance/create', formData);
       setCreatedSessionId(res.data._id);
+      setCurrentToken(res.data.current_token);
+      setTokenExpiresAt(new Date(res.data.token_expires_at));
       setMessage('Session created successfully!');
       // Refetch dashboard data to show updated sessions
       fetchDashboardData();
@@ -391,16 +444,34 @@ export default function TeacherDashboard() {
 
               {/* QR Display */}
               <div className="flex flex-col items-center justify-center">
-                {createdSessionId ? (
+                {createdSessionId && currentToken ? (
                   <div className="text-center space-y-6">
                     <h3 className="text-lg font-semibold text-zinc-200">Active QR Code</h3>
                     <div className="bg-white p-6 shadow-2xl shadow-indigo-500/10 rounded-3xl inline-block border-4 border-zinc-800/50">
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${createdSessionId}`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(JSON.stringify({ sessionId: createdSessionId, token: currentToken }))}`}
                         alt="Session QR Code"
                         className="w-64 h-64"
                       />
                     </div>
+                    {tokenExpiresAt && (
+                      <div className="flex items-center justify-center gap-2 text-sm text-zinc-400">
+                        <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        <span>QR rotates every 55s for security</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => rotateToken(createdSessionId)}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh QR Now
+                    </button>
                     <div className="space-y-2">
                       <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Session Identifier</p>
                       <p className="text-sm font-mono bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg text-zinc-300 inline-block">
@@ -408,8 +479,13 @@ export default function TeacherDashboard() {
                       </p>
                     </div>
                     <p className="text-xs text-zinc-500 max-w-xs mx-auto italic">
-                      Students should scan this code during class time. This QR will expire automatically based on the end time.
+                      QR code rotates automatically for security. Students must scan within 60 seconds of display.
                     </p>
+                  </div>
+                ) : createdSessionId ? (
+                  <div className="text-center space-y-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-800 border-t-indigo-500 mx-auto" />
+                    <p className="text-zinc-500 text-sm">Loading QR code...</p>
                   </div>
                 ) : (
                   <div className="text-zinc-600 text-center p-12 border-2 border-dashed border-zinc-800 rounded-3xl w-full max-w-sm aspect-square flex flex-col items-center justify-center space-y-4">
