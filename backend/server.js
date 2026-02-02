@@ -26,13 +26,13 @@ const app = express();
 
 // 1. CORS Configuration
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://dynaqr-q.vercel.app"
-  ],
+  origin: "https://dyna-qr.vercel.app/",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
+
+// Middleware
+app.use(express.json()); // Allows server to read JSON data
 
 // 2. Rate Limiting
 const limiter = rateLimit({
@@ -43,9 +43,6 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use('/api', limiter); // Apply to all API routes
-
-// Middleware
-app.use(express.json()); // Allows server to read JSON data
 
 // Connect to Database
 connectDB();
