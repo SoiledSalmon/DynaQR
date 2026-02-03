@@ -1,146 +1,189 @@
 # DynaQR
 
-DynaQR is a dynamic QR code management system built with a modern web stack. This repository contains the source code for both the frontend and backend applications.
+A dynamic QR code-based attendance management system for educational institutions. Teachers create attendance sessions that generate rotating QR codes; students scan them to mark attendance securely.
 
-## High-Level Architecture
+## Key Features
 
-The project is structured as a monorepo:
-
-*   **`frontend/`**: A Next.js (App Router) application handling the user interface and client-side logic.
-*   **`backend/`**: A Node.js/Express application serving the API and handling business logic.
+- **Dynamic QR Codes**: Token rotation every 60 seconds prevents screenshot sharing
+- **Role-Based Access**: Separate flows for students and teachers
+- **Teaching Assignments**: Teachers can only create sessions for their assigned courses
+- **Enrollment Validation**: Students can only attend sessions matching their section and semester
+- **Audit Logging**: Security events tracked with 90-day retention
+- **Replay Protection**: Cryptographic tokens prevent duplicate or delayed attendance marking
 
 ## Tech Stack
 
-*   **Frontend**: Next.js (React), TypeScript, Tailwind CSS.
-*   **Backend**: Node.js, Express.js, MongoDB.
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4 |
+| Backend | Express 5, MongoDB, Mongoose 9 |
+| Auth | JWT (30-day tokens) |
+| QR Library | html5-qrcode (scanning), external API (generation) |
 
----
-
-## 1. Setup Instructions
+## Quick Start
 
 ### Prerequisites
-*   **Node.js**: v18 or higher recommended.
-*   **npm**: Included with Node.js.
-*   **MongoDB**: Ensure you have a running MongoDB instance (local or Atlas).
+
+- Node.js 18+
+- MongoDB (local or Atlas)
 
 ### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd DynaQR
-    ```
+```bash
+# Clone the repository
+git clone <repository-url>
+cd DynaQR
 
-2.  **Install Frontend Dependencies:**
-    ```bash
-    cd frontend
-    npm install
-    ```
+# Install backend dependencies
+cd backend
+npm install
 
-3.  **Install Backend Dependencies:**
-    ```bash
-    cd ../backend
-    npm install
-    ```
+# Install frontend dependencies
+cd ../frontend
+npm install
+```
+
+### Environment Configuration
+
+**Backend** (`backend/.env`):
+```bash
+cp .env.example .env
+# Edit .env and set:
+# - MONGO_URI: Your MongoDB connection string
+# - JWT_SECRET: At least 32 random characters (server refuses weak secrets)
+```
+
+**Frontend** (`frontend/.env.local`):
+```bash
+cp .env.example .env.local
+# Default NEXT_PUBLIC_API_URL=http://localhost:5000
+```
+
+### Database Seeding
+
+```bash
+cd backend
+node seed-v2.js           # Seed with sample data
+node seed-v2.js --clean   # Clear and reseed
+```
 
 ### Running the Application
 
-1.  **Start the Backend:**
-    ```bash
-    cd backend
-    npm run dev
-    # Server runs on http://localhost:5000
-    ```
+```bash
+# Terminal 1 - Backend (http://localhost:5000)
+cd backend
+npm run dev
 
-2.  **Start the Frontend:**
-    Open a new terminal.
-    ```bash
-    cd frontend
-    npm run dev
-    # Client runs on http://localhost:3000
-    ```
+# Terminal 2 - Frontend (http://localhost:3000)
+cd frontend
+npm run dev
+```
 
----
-
-## 2. Environment Configuration
-
-The application requires environment variables to function. We provide example files to get you started.
-
-### Frontend
-1.  Navigate to `frontend/`.
-2.  Copy `.env.example` to `.env.local`:
-    ```bash
-    cp .env.example .env.local
-    ```
-3.  Review `.env.local`. The `NEXT_PUBLIC_API_URL` should point to your backend (default: `http://localhost:5000`).
-
-### Backend
-1.  Navigate to `backend/`.
-2.  Copy `.env.example` to `.env`:
-    ```bash
-    cp .env.example .env
-    ```
-3.  Edit `.env` and provide your `MONGO_URI` (connection string).
-4.  **CRITICAL**: Set a strong `JWT_SECRET`.
-    *   It must be at least 32 characters long.
-    *   It must be random and unguessable.
-    *   The server will **refuse to start** if you use the insecure default.
-
----
-
-## 3. Database Seeding
-
-The application requires initial data (students and teachers) to function correctly.
-
-1.  Ensure your MongoDB connection is configured in `backend/.env`.
-2.  Run the seed script from the backend directory:
-    ```bash
-    cd backend
-    node seed.js
-    ```
-3.  This will import mock data from `backend/data/` into your database.
-
----
-
-## 4. Authentication (Current State)
-
-This application currently uses **MOCK Authentication** for development speed and simplicity.
-
-*   **Mechanism**: Login is handled via a standard JWT flow.
-*   **Role Mapping**:
-    *   **Internal (Database)**: The role is stored as `faculty`.
-    *   **External (API/Frontend)**: The role is exposed as `teacher`.
-    *   The backend automatically handles this mapping. Frontend developers should strictly use `teacher`.
-*   **Behavior**:
-    *   You must use a valid email address present in the database (e.g., from the seed data).
-    *   **Password checks are disabled.** You can enter any password or leave it blank (frontend logic may vary, but backend ignores it).
-    *   **Email Domain**: Only emails ending in `@rvce.edu.in` are allowed.
-*   **Roles**: The system supports `student` and `teacher` roles. The backend authoritatively assigns roles based on the email address.
-
-**Note:** This mock setup allows developers to test role-based features without setting up an external identity provider.
-
----
-
-## 5. Authentication (Future Plan)
-
-We plan to migrate to **Google OAuth** in a future release.
-
-*   **Changes**:
-    *   The login form will be replaced by a "Sign in with Google" button.
-    *   The backend will validate Google ID tokens instead of checking passwords.
-*   **No Changes**:
-    *   The internal authorization logic (JWTs, roles, route protection) will remain exactly the same.
-    *   The backend will still issue a JWT to the frontend after verifying the Google identity.
-
----
-
-## Folder Structure
+## Architecture
 
 ```
 DynaQR/
-├── backend/            # Backend API (Node.js/Express)
-├── frontend/           # Frontend Application (Next.js)
-├── .gitignore          # Git ignore rules
-├── README.md           # Project documentation
-└── API_CONTRACT.md     # API Contract documentation
+├── backend/                 # Express API server
+│   ├── controllers/         # Business logic
+│   ├── middleware/          # JWT verification, role auth
+│   ├── models/              # Mongoose schemas
+│   ├── routes/              # API route definitions
+│   ├── migrations/          # Database migration scripts
+│   └── data/                # Seed data files
+├── frontend/                # Next.js application
+│   ├── app/                 # App Router pages
+│   └── lib/                 # Utilities (api, auth, role)
+├── API_CONTRACT.md          # Frozen API specification
+└── CLAUDE.md                # AI assistant instructions
 ```
+
+### Database Schema Domains
+
+**Identity Domain**
+- `Student` - USN, email, section, semester, registration status
+- `Faculty` - Employee ID, email, department, registration status
+
+**Academic Domain**
+- `Subject` - Course code (e.g., CS301), name, department
+- `Teaching` - Faculty-subject-section-semester assignments
+
+**Attendance Domain**
+- `SessionNew` - Attendance sessions with time windows and status
+- `QRToken` - Rotating tokens (60s TTL) for replay protection
+- `AttendanceNew` - Attendance records with verification metadata
+
+**Audit Domain**
+- `AuditLog` - Security events with 90-day TTL
+
+### Security Features
+
+- JWT authentication with 30-day expiration
+- JWT_SECRET minimum 32 characters enforced at startup
+- CORS whitelist for localhost origins
+- Rate limiting: 100 requests per 15 minutes per IP
+- QR token rotation prevents screenshot-based cheating
+- All attendance failures are audit-logged
+
+## Development Commands
+
+### Backend
+
+```bash
+npm run dev              # Start with nodemon (auto-reload)
+node seed-v2.js          # Seed database
+node seed-v2.js --clean  # Clear and reseed
+```
+
+### Frontend
+
+```bash
+npm run dev              # Development server
+npm run build            # Production build
+npm run lint             # ESLint
+```
+
+### Database Migrations
+
+```bash
+cd backend
+node migrations/run-all.js        # Run all migrations
+node migrations/validate.js       # Validate migration
+node migrations/cleanup-guard.js  # Check if safe to drop legacy
+node migrations/cleanup-guard.js --drop  # Drop legacy (DESTRUCTIVE)
+```
+
+## API Overview
+
+The API follows a RESTful design. Full specification in [API_CONTRACT.md](./API_CONTRACT.md).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/login` | POST | Authenticate user |
+| `/api/auth/register` | POST | Register new user |
+| `/api/attendance/create` | POST | Create session (teacher) |
+| `/api/attendance/mark` | POST | Mark attendance (student) |
+| `/api/attendance/session/:id` | GET | Session details (teacher) |
+| `/api/attendance/student-metrics` | GET | Student statistics |
+| `/api/attendance/history` | GET | Student attendance history |
+| `/api/attendance/teacher-dashboard` | GET | Teacher stats + teachings |
+| `/api/attendance/session/:id/rotate-token` | POST | Rotate QR token |
+
+### QR Code Payload Format
+
+```json
+{
+  "sessionId": "MongoDB_ObjectId_String",
+  "token": "6_CHAR_HEX_TOKEN"
+}
+```
+
+## Project Documentation
+
+- [API Contract](./API_CONTRACT.md) - Complete API specification
+- [Backend CLAUDE.md](./backend/CLAUDE.md) - Backend conventions and schema details
+- [Frontend CLAUDE.md](./frontend/CLAUDE.md) - Frontend architecture and patterns
+- [Contributing](./CONTRIBUTING.md) - Development guidelines
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
