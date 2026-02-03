@@ -25,8 +25,17 @@ const app = express();
 // --- SECURITY MIDDLEWARE ---
 
 // 1. CORS Configuration
+// Allow multiple origins via ALLOWED_ORIGINS (comma-separated), default includes prod + localhost for dev
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://dyna-qr.vercel.app,http://localhost:3000').split(',');
 app.use(cors({
-  origin: "https://dyna-qr.vercel.app",
+  origin: function(origin, callback) {
+    // Allow non-browser tools (postman, curl) where origin is undefined
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS not allowed for origin: ' + origin));
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));

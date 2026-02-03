@@ -141,7 +141,14 @@ export default function TeacherDashboard() {
     }
 
     try {
-      const res = await api.post('/api/attendance/create', formData);
+      // Convert local datetime-local values to timezone-aware ISO strings
+      const payload = {
+        ...formData,
+        startTime: new Date(formData.startTime).toISOString(),
+        endTime: new Date(formData.endTime).toISOString()
+      };
+
+      const res = await api.post('/api/attendance/create', payload);
       setCreatedSessionId(res.data._id);
       setCurrentToken(res.data.current_token);
       setTokenExpiresAt(new Date(res.data.token_expires_at));
