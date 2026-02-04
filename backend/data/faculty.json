@@ -10,5 +10,17 @@
     "name": "Dr. Kapoor", 
     "emp_id": "FAC002", 
     "department": "ISE" 
+  },
+  {
+    "email": "prapullasb@rvce.edu.in", 
+    "name": "Prof. Prapulla S B", 
+    "emp_id": "FAC003", 
+    "department": "CSE-CD" 
+  },
+  {
+    "email": "azranasreeen@rvce.edu.in", 
+    "name": "Prof. Azra Nasreen", 
+    "emp_id": "FAC004", 
+    "department": "CSE-CD" 
   }
 ]

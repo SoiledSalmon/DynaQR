@@ -33,5 +33,446 @@
     "usn": "1RV22CS075",
     "section": "B",
     "semester": 5
+  },
+  {
+    "email": "aditiprao.cd24@rvce.edu.in",
+    "name": "ADITI P RAO",
+    "usn": "1RV24CD001",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "adityadixit.cd24@rvce.edu.in",
+    "name": "ADITYA DIXIT",
+    "usn": "1RV24CD002",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "adityaprasad.cd24@rvce.edu.in",
+    "name": "ADITYA PRASAD",
+    "usn": "1RV24CD003",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "akashs.cd24@rvce.edu.in",
+    "name": "AKASH SHIRANTHADKA",
+    "usn": "1RV24CD004",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "amarnathpatil.cd24@rvce.edu.in",
+    "name": "AMARNATH PATIL",
+    "usn": "1RV24CD005",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "ananthgkaranth.cd24@rvce.edu.in",
+    "name": "ANANTH G KARANTH",
+    "usn": "1RV24CD006",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "ananyakr.cd24@rvce.edu.in",
+    "name": "ANANYA K R",
+    "usn": "1RV24CD007",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "aniruddha.cd24@rvce.edu.in",
+    "name": "ANIRUDDHA",
+    "usn": "1RV24CD008",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "anoushkameda.cd24@rvce.edu.in",
+    "name": "ANOUSHKA MEDA",
+    "usn": "1RV24CD009",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "anuraggkharvi.cd24@rvce.edu.in",
+    "name": "ANURAG G KHARVI",
+    "usn": "1RV24CD010",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "arshadnadeemk.cd24@rvce.edu.in",
+    "name": "ARSHAD NADEEM KHAN",
+    "usn": "1RV24CD011",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "avdedeepyareddy.cd24@rvce.edu.in",
+    "name": "AYILA NAGA VENKATA DEDEEPYA REDDY",
+    "usn": "1RV24CD012",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "bgyanendrareddy.cd24@rvce.edu.in",
+    "name": "B GYANENDRA REDDY",
+    "usn": "1RV24CD013",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "bmanideepreddy.cd24@rvce.edu.in",
+    "name": "BEKKEM MANIDEEP REDDY",
+    "usn": "1RV24CD014",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "bipashapal.cd24@rvce.edu.in",
+    "name": "BIPASHA PAL",
+    "usn": "1RV24CD015",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "charanpreetha.cd24@rvce.edu.in",
+    "name": "CHARAN PREETH A",
+    "usn": "1RV24CD016",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "chethanprakashbn.cd24@rvce.edu.in",
+    "name": "CHETHAN PRAKASH B N",
+    "usn": "1RV24CD017",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "chethanthejab.cd24@rvce.edu.in",
+    "name": "CHETHAN THEJA B",
+    "usn": "1RV24CD018",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "darshanj.cd24@rvce.edu.in",
+    "name": "DARSHAN J",
+    "usn": "1RV24CD019",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "deveshgupta.cd24@rvce.edu.in",
+    "name": "DEVESH GUPTA",
+    "usn": "1RV24CD020",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "dinesh.cd24@rvce.edu.in",
+    "name": "DINESH",
+    "usn": "1RV24CD021",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "divyamsinha.cd24@rvce.edu.in",
+    "name": "DIVYAM SINHA",
+    "usn": "1RV24CD022",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "harshitha.cd24@rvce.edu.in",
+    "name": "HARSHITH A",
+    "usn": "1RV24CD023",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "hrishitverma.cd24@rvce.edu.in",
+    "name": "HRISHIT VERMA",
+    "usn": "1RV24CD024",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "hritiahuja.cd24@rvce.edu.in",
+    "name": "HRITI AHUJA",
+    "usn": "1RV24CD025",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "kammarohan.cd24@rvce.edu.in",
+    "name": "KAMMA ROHAN",
+    "usn": "1RV24CD026",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "kishorr.cd24@rvce.edu.in",
+    "name": "KISHOR R",
+    "usn": "1RV24CD027",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "kumaranimesh.cd24@rvce.edu.in",
+    "name": "KUMAR ANIMESH",
+    "usn": "1RV24CD028",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "manojguptadb.cd24@rvce.edu.in",
+    "name": "MANOJ GUPTA D B",
+    "usn": "1RV24CD029",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "mrswaroop.cd24@rvce.edu.in",
+    "name": "MICHELLE REBECCA SWAROOP",
+    "usn": "1RV24CD030",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "mrayhani.cd24@rvce.edu.in",
+    "name": "MOHAMMED RAYHAN I",
+    "usn": "1RV24CD031",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "monirupadebp.cd24@rvce.edu.in",
+    "name": "MONIRUPA DEB PURKAYASTHA",
+    "usn": "1RV24CD032",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "mrunmayeerakeshs.cd24@rvce.edu.in",
+    "name": "MRUNMAYEE RAKESH SHETH",
+    "usn": "1RV24CD033",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "mukeshpm.cd24@rvce.edu.in",
+    "name": "MUKESH P MUTHUKUMAR",
+    "usn": "1RV24CD034",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "neerajk.cd24@rvce.edu.in",
+    "name": "NEERAJ K",
+    "usn": "1RV24CD035",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "nishanthp.cd24@rvce.edu.in",
+    "name": "NISHANTH PRAKASAN",
+    "usn": "1RV24CD036",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "pushkarkp.cd24@rvce.edu.in",
+    "name": "PUSHKAR K P",
+    "usn": "1RV24CD037",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "rajathvs.cd24@rvce.edu.in",
+    "name": "RAJATH V SHANBHOGUE",
+    "usn": "1RV24CD039",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "ramyabhat.cd24@rvce.edu.in",
+    "name": "RAMYA BHAT",
+    "usn": "1RV24CD040",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "ritheshpchauhan.cd24@rvce.edu.in",
+    "name": "RITHESH P CHAUHAN",
+    "usn": "1RV24CD041",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "riyaksujay.cd24@rvce.edu.in",
+    "name": "RIYA KUKKUWADA SUJAY",
+    "usn": "1RV24CD042",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "ronith.cd24@rvce.edu.in",
+    "name": "RONITH",
+    "usn": "1RV24CD043",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "srahulhrithik.cd24@rvce.edu.in",
+    "name": "S RAHUL HRITHIK",
+    "usn": "1RV24CD044",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "sarthaksantoshc.cd24@rvce.edu.in",
+    "name": "SARTHAK SANTOSH CHAVARE",
+    "usn": "1RV24CD045",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "satwikray.cd24@rvce.edu.in",
+    "name": "SATWIK RAY",
+    "usn": "1RV24CD046",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "shravyashekar.cd24@rvce.edu.in",
+    "name": "SHRAVYA SHEKAR",
+    "usn": "1RV24CD047",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "shreeshask.cd24@rvce.edu.in",
+    "name": "SHREESHA S KOUSHIK",
+    "usn": "1RV24CD048",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "shreyaskale.cd24@rvce.edu.in",
+    "name": "SHREYAS KALE",
+    "usn": "1RV24CD049",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "shriyanarayanan.cd24@rvce.edu.in",
+    "name": "SHRIYA NARAYANAN",
+    "usn": "1RV24CD050",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "siddhanthkjain.cd24@rvce.edu.in",
+    "name": "SIDDHANTH K JAIN",
+    "usn": "1RV24CD051",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "sooryaanvekarn.cd24@rvce.edu.in",
+    "name": "SOORYA ANVEKAR NATARAJAN",
+    "usn": "1RV24CD052",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "sudhanvak.cd24@rvce.edu.in",
+    "name": "SUDHANVA KALGUNDI",
+    "usn": "1RV24CD053",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "swastik.cd24@rvce.edu.in",
+    "name": "SWASTIK",
+    "usn": "1RV24CD054",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "thusharbk.cd24@rvce.edu.in",
+    "name": "THUSHAR B K",
+    "usn": "1RV24CD055",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "tpsnarayana.cd24@rvce.edu.in",
+    "name": "TOLETI PURNENDU SATGURU SWARUP NARAYANA",
+    "usn": "1RV24CD056",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "varshinis.cd24@rvce.edu.in",
+    "name": "VARSHINI S",
+    "usn": "1RV24CD057",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "varundsawalkar.cd24@rvce.edu.in",
+    "name": "VARUN D SAWALKAR",
+    "usn": "1RV24CD058",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "vikassidagoudan.cd24@rvce.edu.in",
+    "name": "VIKAS SIDAGOUDA NIDAGUNDE",
+    "usn": "1RV24CD059",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "vishwasyk.cd24@rvce.edu.in",
+    "name": "VISHWAS Y K",
+    "usn": "1RV24CD061",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "ychandrakala.cd24@rvce.edu.in",
+    "name": "YARRAGUNTA CHANDRAKALA",
+    "usn": "1RV24CD062",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "yuvrajprataps.cd24@rvce.edu.in",
+    "name": "YUVRAJ PRATAP SINGH",
+    "usn": "1RV24CD063",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "rsudhanwa.cd24@rvce.edu.in",
+    "name": "R SUDHANWA",
+    "usn": "1RV24CD038",
+    "section": "CD",
+    "semester": 2
+  },
+  {
+    "email": "vishalkirangp.cd24@rvce.edu.in",
+    "name": "VISHAL KIRAN GOWDA P",
+    "usn": "1RV24CD060",
+    "section": "CD",
+    "semester": 2
   }
 ]

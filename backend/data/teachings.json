@@ -33,5 +33,19 @@
     "section": "A",
     "semester": 5,
     "academic_year": "2025-26"
+  },
+  {
+    "faculty_email": "prapullasb@rvce.edu.in",
+    "subject_code": "CD237DL",
+    "section": "CD",
+    "semester": 2,
+    "academic_year": "2025-26"
+  },
+  {
+    "faculty_email": "azranasreen@rvce.edu.in",
+    "subject_code": "CD237DL",
+    "section": "CD",
+    "semester": 2,
+    "academic_year": "2025-26"
   }
 ]
